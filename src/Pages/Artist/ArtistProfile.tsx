@@ -1,4 +1,11 @@
 import Navbar from "../../Layouts/Navbar";
+import { FaCircleCheck, FaStar, FaArrowRightLong } from "react-icons/fa6";
+import {
+  MdVerifiedUser,
+  MdLocationOn,
+  MdPayments,
+  MdOutlineSecurity,
+} from "react-icons/md";
 
 const ArtistProfile = () => {
   return (
@@ -62,7 +69,7 @@ const ArtistProfile = () => {
                       className="material-symbols-outlined text-[14px]"
                       style={{ fontVariationSettings: "'FILL' 1" }}
                     >
-                      verified
+                      <MdVerifiedUser />
                     </span>
                     VERIFIED
                   </span>
@@ -74,20 +81,21 @@ const ArtistProfile = () => {
                       className="material-symbols-outlined text-[#735c00]"
                       style={{ fontVariationSettings: "'FILL' 1" }}
                     >
-                      star
+                      <FaStar />
                     </span>
                     4.9 (124 Reviews)
                   </span>
 
                   <span className="flex items-center gap-1">
                     <span className="material-symbols-outlined">
-                      location_on
+                      <MdLocationOn />
                     </span>
                     Jaipur, Rajasthan
                   </span>
-
                   <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined">payments</span>
+                    <span className="material-symbols-outlined">
+                      <MdPayments />
+                    </span>
                     From ₹25,000
                   </span>
                 </div>
@@ -110,7 +118,7 @@ const ArtistProfile = () => {
                 className="text-[#4d4635] text-sm flex items-center gap-2"
               >
                 <span className="material-symbols-outlined text-[#006d2f]">
-                  check_circle
+                  <FaCircleCheck />
                 </span>
                 {item}
               </span>
@@ -148,7 +156,7 @@ const ArtistProfile = () => {
                 <span className="text-[#735c00] font-semibold flex items-center gap-1 cursor-pointer">
                   View All
                   <span className="material-symbols-outlined">
-                    arrow_forward
+                    <FaArrowRightLong />
                   </span>
                 </span>
               </div>
@@ -224,7 +232,7 @@ const ArtistProfile = () => {
 
               <div className="bg-[#b12b31]/5 p-6 rounded-2xl flex gap-4">
                 <span className="material-symbols-outlined text-[#b12b31] text-3xl">
-                  security
+                  <MdOutlineSecurity />
                 </span>
 
                 <div>

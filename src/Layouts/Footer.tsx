@@ -1,6 +1,6 @@
 function Footer() {
   return (
-    <footer className="w-full py-12 bg-stone-100 flex flex-col items-center gap-6 px-4">
+    <footer className="w-full py-12 bg-stone-200 flex flex-col items-center gap-6 px-4">
       <div className="font-['Plus_Jakarta_Sans'] font-bold text-stone-800 text-lg">
         Heritage Weddings
       </div>
@@ -24,7 +24,7 @@ function Footer() {
       </div>
 
       <div className="text-stone-500 font-['Lexend'] text-xs text-center">
-        © 2024 Heritage Weddings. Crafted for your special day.
+        {`© ${new Date().getFullYear()} Heritage Weddings. Crafted for your special day.`}
       </div>
     </footer>
   );

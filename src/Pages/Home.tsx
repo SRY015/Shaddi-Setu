@@ -12,7 +12,7 @@ const Home: React.FC = () => {
 
       <main className="pt-24">
         {/* HERO */}
-        <section className="relative px-6 py-12 md:py-24 overflow-hidden">
+        <section className="relative px-6 py-12 md:py-5 overflow-hidden">
           <div className="max-w-7xl mx-auto grid lg:grid-cols-2 gap-12 items-center">
             {/* LEFT */}
             <div className="space-y-8">
@@ -78,7 +78,7 @@ const Home: React.FC = () => {
                 />
               </div>
 
-              <div className="absolute bottom-0 left-0 bg-yellow-100 p-4 rounded-lg shadow-lg max-w-xs">
+              <div className="absolute bottom-0 left-0 bg-yellow-100 p-4 rounded-lg shadow-lg max-w-xs z-10">
                 <p className="text-sm italic font-bold">
                   "I found the perfect makeup artist within my budget!"
                 </p>
@@ -89,12 +89,12 @@ const Home: React.FC = () => {
         </section>
 
         {/* STRIP */}
-        <div className="bg-gray-200 py-4 overflow-x-auto whitespace-nowrap flex gap-8 px-6 text-sm font-bold">
+        {/* <div className="bg-gray-200 py-4 overflow-x-auto whitespace-nowrap flex gap-8 px-6 text-sm font-bold">
           <span>✔ Booked in Meerut 2h ago</span>
           <span>✔ 50+ Artists in Bhopal</span>
           <span>✔ New Photographer from Nashik</span>
           <span>✔ Secure Payments</span>
-        </div>
+        </div> */}
 
         {/* ARTISTS */}
         <section className="max-w-7xl mx-auto px-6 py-20">
@@ -179,7 +179,7 @@ const Home: React.FC = () => {
             </div>
 
             <button
-              onClick={() => navigate("/artist-onboarding")}
+              onClick={() => navigate("/artist-registration")}
               className="bg-white text-[#b12b31] px-6 py-3 rounded-lg font-bold cursor-pointer"
             >
               Join Now

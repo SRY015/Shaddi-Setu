@@ -1,13 +1,16 @@
 import { createBrowserRouter, Outlet } from "react-router-dom";
 import "./App.css";
 import Home from "./Pages/Home";
-import Login from "./Pages/Auth/User/Login";
-import RegisterUser from "./Pages/Auth/User/RegisterUser";
+import Login from "./Pages/Auth/Customer/Login";
+import RegisterUser from "./Pages/Auth/Customer/RegisterUser";
 import ArtistOnboarding from "./Pages/ArtistOnboarding";
 import ProfileCompletion from "./Pages/ArtistOnboarding/ProfileCompletion";
 import SearchResultsPage from "./Pages/SearchResultsPage";
 import ArtistProfile from "./Pages/Artist/ArtistProfile";
 import CustomerDashboard from "./Pages/Customer/CustomerDashboard";
+import ArtistRegistration from "./Pages/Auth/Artist/ArtistRegistration";
+import ArtistDashboard from "./Pages/Artist/ArtistDashboard";
+import RoleProtectedRoute from "./Components/RoleProtectedRoute";
 
 function App() {
   return (
@@ -43,6 +46,10 @@ const appRouter = createBrowserRouter([
         element: <ArtistOnboarding />,
       },
       {
+        path: "artist-registration",
+        element: <ArtistRegistration />,
+      },
+      {
         path: "profile-created",
         element: <ProfileCompletion />,
       },
@@ -52,7 +59,19 @@ const appRouter = createBrowserRouter([
       },
       {
         path: "customer-dashboard",
-        element: <CustomerDashboard />,
+        element: (
+          <RoleProtectedRoute allowedRoles={["Customer"]}>
+            <CustomerDashboard />
+          </RoleProtectedRoute>
+        ),
+      },
+      {
+        path: "artist-dashboard",
+        element: (
+          <RoleProtectedRoute allowedRoles={["Photographer", "Makeup Artist"]}>
+            <ArtistDashboard />
+          </RoleProtectedRoute>
+        ),
       },
     ],
   },

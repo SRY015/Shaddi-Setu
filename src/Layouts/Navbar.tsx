@@ -1,66 +1,33 @@
-// import { NavLink } from "react-router-dom";
-
-// const Navbar = () => {
-//   return (
-//     <nav className="fixed top-0 w-full z-50 backdrop-blur-md bg-[#fdf8f9]/80 shadow-sm">
-//       <div className="flex justify-between items-center px-6 py-4 max-w-7xl mx-auto">
-//         <div className="text-2xl font-extrabold text-[#b12b31] italic tracking-tight">
-//           Gramin Vivah
-//         </div>
-
-//         <div className="hidden md:flex items-center gap-8">
-//           <NavLink to="/" className="text-stone-600 hover:text-[#b12b31]">
-//             Home
-//           </NavLink>
-//           <NavLink
-//             to="/search-artist"
-//             className="text-stone-600 hover:text-[#b12b31]"
-//           >
-//             Search
-//           </NavLink>
-//           <NavLink
-//             to="/artist-onboarding"
-//             className="text-stone-600 hover:text-[#b12b31]"
-//           >
-//             Join as Artist
-//           </NavLink>
-//           <NavLink
-//             to="/user-login"
-//             className="text-stone-600 hover:text-[#b12b31]"
-//           >
-//             Login
-//           </NavLink>
-//           <NavLink
-//             to="/customer-dashboard"
-//             className="text-stone-600 hover:text-[#b12b31]"
-//           >
-//             Dashboard
-//           </NavLink>
-//         </div>
-
-//         <button className="md:hidden text-[#b12b31] text-2xl">☰</button>
-//       </div>
-//     </nav>
-//   );
-// };
-
-// export default Navbar;
-
-// //text-[#b12b31] border-b-2 border-[#b12b31] pb-1 font-bold
-
 import { useState } from "react";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../Context/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
+  const { user, userProfile, logout } = useAuth();
+
+  console.log(userProfile);
+
   const navItems = [
     { path: "/", label: "Home" },
     { path: "/search-artist", label: "Search" },
-    { path: "/artist-onboarding", label: "Join as Artist" },
-    { path: "/user-login", label: "Login" },
-    { path: "/customer-dashboard", label: "Dashboard" },
+    {
+      path:
+        userProfile?.role === "Photographer" ||
+        userProfile?.role === "Photographer"
+          ? "/artist-dashboard"
+          : "/customer-dashboard",
+      label: "Dashboard",
+    },
+    { path: "/user-login", label: user == null ? "Login" : "Logout" },
   ];
+
+  const handleLogout = (label: string) => {
+    if (label === "Logout") {
+      logout();
+    }
+  };
 
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `transition-all duration-300 ${
@@ -82,12 +49,39 @@ const Navbar = () => {
           </NavLink>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+          {/* <div className="hidden md:flex items-center gap-6 lg:gap-8">
             {navItems.map((item) => (
               <NavLink key={item.path} to={item.path} className={navLinkClass}>
                 {item.label}
               </NavLink>
             ))}
+          </div> */}
+
+          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+            {navItems.map((item) => (
+              <NavLink
+                onClick={() => handleLogout(item.label)}
+                key={item.path}
+                to={item.path}
+                className={navLinkClass}
+              >
+                {item.label}
+              </NavLink>
+            ))}
+
+            {/* Profile Image */}
+            {user !== null && (
+              <div className="ml-4">
+                <img
+                  src={
+                    userProfile?.profileImage ||
+                    "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  }
+                  alt="Profile"
+                  className="w-11 h-11 rounded-full object-cover border-2 border-[#b12b31]"
+                />
+              </div>
+            )}
           </div>
 
           {/* Mobile Hamburger */}
