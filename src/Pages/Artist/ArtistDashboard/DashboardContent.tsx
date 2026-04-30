@@ -19,7 +19,6 @@ const DashboardContent = ({
 }: {
   userProfile: UserProfile | null;
 }) => {
-  console.log(userProfile);
   return (
     <div className="space-y-6">
       <div>

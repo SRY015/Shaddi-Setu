@@ -6,6 +6,11 @@ import appRouter from "./App.tsx";
 import { RouterProvider } from "react-router-dom";
 import { AuthProvider } from "./Context/AuthContext";
 
+// map -->
+import "leaflet/dist/leaflet.css";
+import "leaflet-defaulticon-compatibility";
+import "leaflet-defaulticon-compatibility/dist/leaflet-defaulticon-compatibility.css";
+
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <AuthProvider>

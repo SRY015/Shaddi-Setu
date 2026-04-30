@@ -1,36 +1,31 @@
 import React, { useState } from "react";
 import Navbar from "../../../Layouts/Navbar";
-import Bookings from "./Bookings";
-import DashboardContent from "./DashboardContent";
-import Profile from "./Profile";
-import { FaRegCalendarAlt } from "react-icons/fa";
+import { FaRegCalendarAlt, FaHeart } from "react-icons/fa";
 import { CgProfile } from "react-icons/cg";
-import {
-  MdDashboard,
-  MdOutlinePalette,
-  MdOutlinePayments,
-} from "react-icons/md";
-import PortfolioManagement from "./PortfolioManagement";
+import { MdDashboard } from "react-icons/md";
 import { useAuth } from "../../../Context/AuthContext";
+import DashboardContent from "./DashboardContent";
+import SavedArtists from "./SavedArtists";
+import MyBookings from "./MyBookings";
+import ProfileSettings from "./ProfileSettins";
 
 const tabs = [
   { id: "dashboard", label: "Dashboard", icon: <MdDashboard /> },
-  { id: "portfolio", label: "Portfolio", icon: <MdOutlinePalette /> },
-  { id: "bookings", label: "Bookings", icon: <FaRegCalendarAlt /> },
-  { id: "earnings", label: "Earnings", icon: <MdOutlinePayments /> },
+  { id: "bookings", label: "My Bookings", icon: <FaRegCalendarAlt /> },
+  { id: "saved-artists", label: "Saved Artists", icon: <FaHeart /> },
   { id: "profile", label: "Profile", icon: <CgProfile /> },
 ];
 
-const DummyPage = ({ title }: { title: string }) => (
-  <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#f1edee] min-h-75 flex items-center justify-center">
-    <div className="text-center">
-      <h2 className="text-2xl font-bold text-[#1c1b1c] mb-2">{title}</h2>
-      <p className="text-gray-500">
-        This is a dummy {title.toLowerCase()} page for navigation flow.
-      </p>
-    </div>
-  </div>
-);
+// const DummyPage = ({ title }: { title: string }) => (
+//   <div className="bg-white rounded-2xl p-6 shadow-sm border border-[#f1edee] min-h-75 flex items-center justify-center">
+//     <div className="text-center">
+//       <h2 className="text-2xl font-bold text-[#1c1b1c] mb-2">{title}</h2>
+//       <p className="text-gray-500">
+//         This is a dummy {title.toLowerCase()} page for navigation flow.
+//       </p>
+//     </div>
+//   </div>
+// );
 
 const ArtistDashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -39,14 +34,12 @@ const ArtistDashboard: React.FC = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "portfolio":
-        return <PortfolioManagement userProfile={userProfile} />;
       case "bookings":
-        return <Bookings />;
-      case "earnings":
-        return <DummyPage title="Earnings" />;
+        return <MyBookings />;
+      case "saved-artists":
+        return <SavedArtists />;
       case "profile":
-        return <Profile userProfile={userProfile} />;
+        return <ProfileSettings userProfile={userProfile} />;
       default:
         return <DashboardContent userProfile={userProfile} />;
     }

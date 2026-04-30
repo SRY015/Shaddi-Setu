@@ -15,7 +15,7 @@ const Navbar = () => {
     {
       path:
         userProfile?.role === "Photographer" ||
-        userProfile?.role === "Photographer"
+        userProfile?.role === "makrup artist"
           ? "/artist-dashboard"
           : "/customer-dashboard",
       label: "Dashboard",

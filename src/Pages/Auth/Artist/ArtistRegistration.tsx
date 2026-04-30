@@ -335,6 +335,8 @@ import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { COLLECTIONS, db } from "../../../Config/firebaseConfig";
 import uploadToCloudinary from "../../../Utils/uploadToCloudinary";
 import { useState } from "react";
+import { toast } from "react-toastify";
+import { errorOpts, successOpts, warningOpts } from "../../../Config/toast";
 
 interface FormData {
   fullName: string;
@@ -392,47 +394,47 @@ const ArtistRegistration = () => {
    */
   const validateForm = () => {
     if (!formData.fullName.trim()) {
-      alert("Please enter full name");
+      toast("Please enter full name", warningOpts);
       return false;
     }
 
     if (formData.fullName.trim().length < 3) {
-      alert("Full name must be at least 3 characters");
+      toast("Full name must be at least 3 characters", warningOpts);
       return false;
     }
 
     if (!formData.phone.trim()) {
-      alert("Please enter mobile number");
+      toast("Please enter mobile number", warningOpts);
       return false;
     }
 
     if (!/^[0-9]{10}$/.test(formData.phone)) {
-      alert("Please enter a valid 10-digit mobile number");
+      toast("Please enter a valid 10-digit mobile number", warningOpts);
       return false;
     }
 
     if (!formData.email.trim()) {
-      alert("Please enter email");
+      toast("Please enter email", warningOpts);
       return false;
     }
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
-      alert("Please enter a valid email address");
+      toast("Please enter a valid email address", warningOpts);
       return false;
     }
 
     if (!formData.password.trim()) {
-      alert("Please enter password");
+      toast("Please enter password", warningOpts);
       return false;
     }
 
     if (formData.password.length < 6) {
-      alert("Password must be at least 6 characters");
+      toast("Password must be at least 6 characters", warningOpts);
       return false;
     }
 
     if (!formData.profileImage) {
-      alert("Please upload profile photo");
+      toast("Please upload profile photo", warningOpts);
       return false;
     }
 
@@ -451,7 +453,7 @@ const ArtistRegistration = () => {
       );
 
       if (!response.success || !response.user) {
-        alert(response.message);
+        toast(response.message, errorOpts);
         return;
       }
 
@@ -473,11 +475,14 @@ const ArtistRegistration = () => {
         createdAt: serverTimestamp(),
       });
 
-      alert("Registration successful");
+      toast("Registration successful", successOpts);
 
-      navigate("/artist-dashboard");
+      setTimeout(() => {
+        navigate("/artist-dashboard");
+      }, 2000);
     } catch (error) {
-      console.log("Error in creating user : ", error);
+      console.log("Error in creating artist : ", error);
+      toast("Error in creating artist", errorOpts);
     }
   };
 

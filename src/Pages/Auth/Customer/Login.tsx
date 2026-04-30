@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthContext";
 import { toast } from "react-toastify";
@@ -56,15 +56,19 @@ const Login: React.FC = () => {
     }
 
     toast("Login successful", successOpts);
-
-    setTimeout(() => {
-      if (userProfile?.role === "Customer") {
-        navigate("/customer-dashboard");
-      } else {
-        navigate("/artist-dashboard");
-      }
-    }, 2000);
   };
+
+  useEffect(() => {
+    if (!userProfile) return;
+
+    console.log(userProfile.role, "role loaded");
+
+    if (userProfile.role === "customer") {
+      navigate("/customer-dashboard");
+    } else {
+      navigate("/artist-dashboard");
+    }
+  }, [userProfile, navigate]);
 
   return (
     <div className="bg-[#fdf8f9] text-[#1c1b1c] h-screen overflow-hidden font-sans">

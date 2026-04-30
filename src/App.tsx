@@ -7,7 +7,7 @@ import ArtistOnboarding from "./Pages/ArtistOnboarding";
 import ProfileCompletion from "./Pages/ArtistOnboarding/ProfileCompletion";
 import SearchResultsPage from "./Pages/SearchResultsPage";
 import ArtistProfile from "./Pages/Artist/ArtistProfile";
-import CustomerDashboard from "./Pages/Customer/CustomerDashboard";
+import CustomerDashboard from "./Pages/Customer/CustomerDashboard/index";
 import ArtistRegistration from "./Pages/Auth/Artist/ArtistRegistration";
 import ArtistDashboard from "./Pages/Artist/ArtistDashboard";
 import RoleProtectedRoute from "./Components/RoleProtectedRoute";
@@ -60,7 +60,7 @@ const appRouter = createBrowserRouter([
       {
         path: "customer-dashboard",
         element: (
-          <RoleProtectedRoute allowedRoles={["Customer"]}>
+          <RoleProtectedRoute allowedRoles={["customer"]}>
             <CustomerDashboard />
           </RoleProtectedRoute>
         ),

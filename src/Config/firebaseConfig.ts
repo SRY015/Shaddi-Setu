@@ -53,5 +53,6 @@ if (USE_EMULATOR) {
 }
 
 export const COLLECTIONS = {
-  users: "graminVivah-users",
+  users: "graminVivah/default/users",
+  portfolios: "graminVivah/default/portfolios",
 };

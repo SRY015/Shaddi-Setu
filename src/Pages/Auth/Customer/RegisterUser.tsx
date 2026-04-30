@@ -1,7 +1,147 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../../Context/AuthContext";
+import { doc, setDoc } from "firebase/firestore";
+import { COLLECTIONS, db } from "../../../Config/firebaseConfig";
+import uploadToCloudinary from "../../../Utils/uploadToCloudinary";
+import { toast } from "react-toastify";
+import { errorOpts, successOpts, warningOpts } from "../../../Config/toast";
+import LocationPicker from "../../../Components/LocationPicker";
+
+interface FormData {
+  fullName: string;
+  email: string;
+  phone: string;
+  location: string;
+  latitude: string | number | null;
+  longitude: string | number | null;
+  password: string;
+  profileImage: File | null;
+}
 
 const RegisterUser: React.FC = () => {
+  const navigate = useNavigate();
+  const { registerWithEmail, loading } = useAuth();
+
+  const [imagePreview, setImagePreview] = useState<string>("");
+  const [formData, setFormData] = useState<FormData>({
+    fullName: "",
+    email: "",
+    phone: "",
+    location: "",
+    latitude: null,
+    longitude: null,
+    password: "",
+    profileImage: null,
+  });
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setFormData((prev) => ({
+      ...prev,
+      profileImage: file,
+    }));
+    const previewUrl = URL.createObjectURL(file);
+    setImagePreview(previewUrl);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const validateForm = () => {
+    if (!formData.fullName.trim()) {
+      toast("Please enter full name", warningOpts);
+      return false;
+    }
+
+    if (!formData.email.trim()) {
+      toast("Please enter email", warningOpts);
+      return false;
+    }
+
+    if (!formData.phone.trim()) {
+      toast("Please enter phone number", warningOpts);
+      return false;
+    }
+
+    if (!formData.location.trim()) {
+      toast("Please enter your village/town", warningOpts);
+      return false;
+    }
+
+    if (!formData.password.trim()) {
+      toast("Please enter password", warningOpts);
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      toast("Password must be at least 6 characters", warningOpts);
+      return false;
+    }
+
+    if (!formData.location.trim()) {
+      alert("Please select your location from map");
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSubmit = async () => {
+    const isValid = validateForm();
+
+    if (!isValid) return;
+
+    try {
+      let profileImageUrl = "";
+      if (formData.profileImage) {
+        profileImageUrl = await uploadToCloudinary(formData.profileImage);
+      }
+
+      const response = await registerWithEmail(
+        formData.email,
+        formData.password,
+      );
+
+      if (!response.success) {
+        toast(response.message, errorOpts);
+        return;
+      }
+
+      if (!response.user) {
+        toast("User creation failed", errorOpts);
+        return;
+      }
+
+      const uid = response.user.uid;
+
+      await setDoc(doc(db, COLLECTIONS.users, uid), {
+        uid,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        location: formData.location,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        profilePic: profileImageUrl,
+        role: "customer",
+        createdAt: new Date(),
+      });
+
+      toast("Registration Successful", successOpts);
+      navigate("/customer-dashboard");
+    } catch (error) {
+      console.error(error);
+      toast("Something went wrong", errorOpts);
+    }
+  };
   return (
     <div className="bg-[#fdf8f9] min-h-screen lg:h-screen overflow-hidden text-[#1c1b1c] font-sans selection:bg-[#ff9591] selection:text-white">
       <main className="flex flex-col md:flex-row min-h-screen lg:h-full">
@@ -65,9 +205,18 @@ const RegisterUser: React.FC = () => {
                     <input
                       type="file"
                       accept="image/*"
+                      onChange={handleImageUpload}
                       className="absolute inset-0 opacity-0 cursor-pointer z-10"
                     />
-                    <span className="text-3xl">📷</span>
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Profile Preview"
+                        className="w-full h-full object-cover rounded-full"
+                      />
+                    ) : (
+                      <span className="text-3xl">📷</span>
+                    )}
                   </div>
                   <div className="absolute bottom-1 right-1 w-8 h-8 rounded-full bg-[#b12b31] text-white flex items-center justify-center font-bold shadow-lg">
                     +
@@ -85,6 +234,9 @@ const RegisterUser: React.FC = () => {
                 </label>
                 <input
                   type="text"
+                  name="fullName"
+                  value={formData.fullName}
+                  onChange={handleChange}
                   placeholder="Enter your full name"
                   className="w-full h-12 sm:h-12 px-4 rounded-xl border-none bg-[#f7f2f3] focus:outline-none focus:ring-2 focus:ring-[#b12b31]"
                 />
@@ -97,6 +249,9 @@ const RegisterUser: React.FC = () => {
                 </label>
                 <input
                   type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
                   placeholder="Enter your email address"
                   className="w-full h-12 sm:h-12 px-4 rounded-xl border-none bg-[#f7f2f3] focus:outline-none focus:ring-2 focus:ring-[#b12b31]"
                 />
@@ -110,31 +265,38 @@ const RegisterUser: React.FC = () => {
                 <div className="relative">
                   <input
                     type="tel"
+                    name="phone"
+                    value={formData.phone}
+                    onChange={handleChange}
                     placeholder="98765 43210"
                     className="w-full h-12 sm:h-12 pl-4 pr-24 rounded-xl border-none bg-[#f7f2f3] focus:outline-none focus:ring-2 focus:ring-[#b12b31]"
                   />
-                  <button className="absolute right-2 top-2 bottom-2 px-4 rounded-lg bg-[#e6e1e2] text-[#b12b31] font-bold text-sm hover:bg-[#b12b31]/10 transition-all">
+                  {/* <button className="absolute right-2 top-2 bottom-2 px-4 rounded-lg bg-[#e6e1e2] text-[#b12b31] font-bold text-sm hover:bg-[#b12b31]/10 transition-all">
                     Verify
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
               {/* Location */}
-              <div className="space-y-1">
+              {/* <div className="space-y-1">
                 <label className="block text-sm font-semibold text-[#1c1b1c]/70 px-1">
                   Your Village/Town Name
                 </label>
                 <div className="relative">
                   <input
                     type="text"
+                    name="location"
+                    value={formData.location}
+                    onChange={handleChange}
                     placeholder="Which town are you from?"
                     className="w-full h-12 sm:h-12 pl-12 pr-4 rounded-xl border-none bg-[#f7f2f3] focus:outline-none focus:ring-2 focus:ring-[#b12b31]"
                   />
                   <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                    📍
+                    <IoLocation />
                   </div>
                 </div>
-              </div>
+              </div> */}
+              <LocationPicker setFormData={setFormData} mode="input" />
 
               {/* Password */}
               <div className="space-y-1">
@@ -143,6 +305,9 @@ const RegisterUser: React.FC = () => {
                 </label>
                 <input
                   type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
                   placeholder="Enter your password"
                   className="w-full h-12 sm:h-12 px-4 rounded-xl border-none bg-[#f7f2f3] focus:outline-none focus:ring-2 focus:ring-[#b12b31]"
                 />
@@ -151,8 +316,13 @@ const RegisterUser: React.FC = () => {
 
             {/* Actions */}
             <div className="pt-2 space-y-4">
-              <button className="w-full h-12 sm:h-12 bg-[#b12b31] text-white font-bold text-base sm:text-lg rounded-xl shadow-lg flex items-center justify-center gap-2">
-                Create My Account <span>→</span>
+              <button
+                type="button"
+                className="w-full h-12 sm:h-12 bg-[#b12b31] text-white font-bold text-base sm:text-lg rounded-xl shadow-lg flex items-center justify-center gap-2 cursor-pointer"
+                onClick={handleSubmit}
+                disabled={loading}
+              >
+                {loading ? "Creating Account..." : "Create My Account →"}
               </button>
 
               {/* <button className="w-full h-12 sm:h-12 bg-white border border-[#d0c5af]/40 text-[#1c1b1c] font-semibold text-base sm:text-lg rounded-xl hover:bg-[#f7f2f3] transition-all">
