@@ -84,7 +84,7 @@ const PROFILE_FIELDS = [
   { key: "serviceType", weight: 10 },
   { key: "bio", weight: 10 },
   { key: "location", weight: 10 },
-  { key: "profileImage", weight: 10 },
+  { key: "profilePicture", weight: 10 },
   { key: "travelDistance", weight: 5 },
   { key: "offDays", weight: 5 },
   { key: "servicePackages", weight: 10 },
@@ -105,8 +105,9 @@ const Profile = ({ userProfile }: { userProfile: ArtistProfile | null }) => {
       ? userProfile.serviceHours
       : defaultServiceHours,
     servicePackages: userProfile?.servicePackages || [],
-    profileImage: userProfile?.profileImage || "",
+    profilePicture: userProfile?.profilePicture || "",
     verified: false,
+    profileCompletion: userProfile?.profileCompletion || 40,
   });
 
   const [saving, setSaving] = useState(false);
@@ -161,6 +162,12 @@ const Profile = ({ userProfile }: { userProfile: ArtistProfile | null }) => {
     setProfilePreview(previewUrl);
   };
 
+  const getLowestPrice = (packages: any[]) => {
+    if (!packages || packages.length === 0) return 0;
+
+    return Math.min(...packages.map((pkg) => pkg.price));
+  };
+
   const handleSave = async () => {
     try {
       if (!userProfile?.uid) return;
@@ -170,15 +177,19 @@ const Profile = ({ userProfile }: { userProfile: ArtistProfile | null }) => {
 
       setSaving(true);
 
-      let profileImageUrl = formData.profileImage || "";
+      let profileImageUrl = formData.profilePicture || "";
 
       if (profilePic) {
         profileImageUrl = await uploadToCloudinary(profilePic);
       }
 
-      await updateDoc(doc(db, COLLECTIONS.users, userProfile.uid), {
+      const startingPrice = getLowestPrice(formData.servicePackages || []);
+
+      await updateDoc(doc(db, COLLECTIONS.artists, userProfile.uid), {
         ...formData,
-        profileImage: profileImageUrl,
+        profilePicture: profileImageUrl,
+        profileCompletion: profileCompletion,
+        startingPrice,
         updatedAt: new Date(),
       });
 
@@ -186,7 +197,7 @@ const Profile = ({ userProfile }: { userProfile: ArtistProfile | null }) => {
 
       setInitialData({
         ...formData,
-        profileImage: profileImageUrl,
+        profilePicture: profileImageUrl,
       });
 
       setProfilePic(null);
@@ -202,7 +213,7 @@ const Profile = ({ userProfile }: { userProfile: ArtistProfile | null }) => {
     if (!initialData) return;
 
     setFormData(initialData);
-    setProfilePreview(initialData.profileImage || "");
+    setProfilePreview(initialData.profilePicture || "");
     setProfilePic(null);
   };
 
@@ -437,7 +448,7 @@ const Profile = ({ userProfile }: { userProfile: ArtistProfile | null }) => {
                     <img
                       src={
                         profilePreview ||
-                        formData?.profileImage ||
+                        formData?.profilePicture ||
                         "https://via.placeholder.com/300x300?text=Profile"
                       }
                       alt="Profile"
@@ -504,8 +515,9 @@ const Profile = ({ userProfile }: { userProfile: ArtistProfile | null }) => {
                   </label>
                   <div className="flex flex-wrap gap-2">
                     {["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"].map(
-                      (day) => (
+                      (day, index) => (
                         <button
+                          key={index}
                           type="button"
                           onClick={() => handleToggleOffDay(day)}
                           className={`px-3 py-1.5 rounded-lg text-[10px] font-bold border ${

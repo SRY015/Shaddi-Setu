@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../../Context/AuthContext";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { COLLECTIONS, db } from "../../../Config/firebaseConfig";
 import uploadToCloudinary from "../../../Utils/uploadToCloudinary";
 import { toast } from "react-toastify";
@@ -122,7 +122,8 @@ const RegisterUser: React.FC = () => {
 
       const uid = response.user.uid;
 
-      await setDoc(doc(db, COLLECTIONS.users, uid), {
+      // Save customer data to firestore
+      await setDoc(doc(db, COLLECTIONS.customers, uid), {
         uid,
         fullName: formData.fullName,
         email: formData.email,
@@ -130,9 +131,20 @@ const RegisterUser: React.FC = () => {
         location: formData.location,
         latitude: formData.latitude,
         longitude: formData.longitude,
-        profilePic: profileImageUrl,
+        profilePicture: profileImageUrl,
         role: "customer",
-        createdAt: new Date(),
+        createdAt: serverTimestamp(),
+      });
+
+      // Save User data to Firestore
+      await setDoc(doc(db, COLLECTIONS.users, uid), {
+        uid,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        profilePicture: profileImageUrl,
+        role: "customer",
+        createdAt: serverTimestamp(),
       });
 
       toast("Registration Successful", successOpts);

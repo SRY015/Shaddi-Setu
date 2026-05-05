@@ -16,7 +16,8 @@ import {
 import type { ConfirmationResult, User, UserCredential } from "firebase/auth";
 
 import { auth, COLLECTIONS, db } from "../Config/firebaseConfig";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, onSnapshot, getDoc } from "firebase/firestore";
+import type { ArtistProfile } from "../Types/artistTypes";
 
 interface AuthContextType {
   /**
@@ -27,7 +28,6 @@ interface AuthContextType {
   loading: boolean;
   user: User | null;
   userProfile: UserProfile | null;
-  fetchUserProfile: (uid: string) => Promise<void>;
 
   /**
    * -----------------------------
@@ -110,12 +110,9 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-interface UserProfile {
-  fullName: string;
-  email: string;
-  phone: string;
+interface UserProfile extends Omit<ArtistProfile, "role" | "profilePicture"> {
   role: string;
-  profileImage: string;
+  profilePicture: string;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -389,38 +386,139 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   console.log({ user });
 
-  const fetchUserProfile = async (uid: string) => {
-    console.log("fetchUserProfile called");
-    try {
-      const userRef = doc(db, COLLECTIONS.users, uid);
-      const userSnap = await getDoc(userRef);
+  // const fetchUserProfile = async (uid: string) => {
+  //   console.log("fetchUserProfile called");
+  //   try {
+  //     const userRef = doc(db, COLLECTIONS.users, uid);
+  //     const userSnap = await getDoc(userRef);
 
-      if (userSnap.exists()) {
-        setUserProfile(userSnap.data() as UserProfile);
-      }
-    } catch (error) {
-      console.log("Error fetching user profile:", error);
-    }
-  };
+  //     if (userSnap.exists()) {
+  //       setUserProfile(userSnap.data() as UserProfile);
+  //     }
+  //   } catch (error) {
+  //     console.log("Error fetching user profile:", error);
+  //   }
+  // };
+
+  // const listenUserProfile = (uid: string) => {
+  //   console.log("Listening to user profile...");
+
+  //   const userRef = doc(db, COLLECTIONS.users, uid);
+
+  //   const unsubscribe = onSnapshot(
+  //     userRef,
+  //     (snapshot) => {
+  //       if (snapshot.exists()) {
+  //         setUserProfile(snapshot.data() as UserProfile);
+  //       } else {
+  //         console.warn("User profile not found");
+  //         setUserProfile(null);
+  //       }
+  //     },
+  //     (error) => {
+  //       console.error("Error in user profile listener:", error);
+  //     },
+  //   );
+
+  //   return unsubscribe; // VERY IMPORTANT
+  // };
+
+  // useEffect(() => {
+  //   const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+  //     try {
+  //       if (currentUser) {
+  //         setUser(currentUser);
+  //         await fetchUserProfile(currentUser.uid);
+  //       } else {
+  //         setUser(null);
+  //         setUserProfile(null);
+  //       }
+  //     } catch (error) {
+  //       console.log(error);
+  //     } finally {
+  //       setInitialLoading(false);
+  //     }
+  //   });
+
+  //   return () => unsubscribe();
+  // }, []);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      try {
-        if (currentUser) {
-          setUser(currentUser);
-          await fetchUserProfile(currentUser.uid);
-        } else {
-          setUser(null);
+    let unsubscribeProfile: (() => void) | null = null;
+
+    const unsubscribeAuth = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+
+        // First, get the role from users collection
+        try {
+          const userRef = doc(db, COLLECTIONS.users, currentUser.uid);
+          const userSnap = await getDoc(userRef);
+
+          if (userSnap.exists()) {
+            const userData = userSnap.data();
+            const role = userData.role;
+
+            let profileCollection = "";
+            if (role === "customer") {
+              profileCollection = COLLECTIONS.customers;
+            } else if (role === "photographer" || role === "makeup artist") {
+              profileCollection = COLLECTIONS.artists;
+            }
+
+            if (profileCollection) {
+              // Now listen to the profile collection
+              const profileRef = doc(db, profileCollection, currentUser.uid);
+              unsubscribeProfile = onSnapshot(
+                profileRef,
+                (snapshot) => {
+                  if (snapshot.exists()) {
+                    setUserProfile(snapshot.data() as UserProfile);
+                  } else {
+                    console.warn(
+                      "User profile not found in",
+                      profileCollection,
+                    );
+                    setUserProfile(null);
+                  }
+                },
+                (error) => {
+                  console.error("Error in profile listener:", error);
+                },
+              );
+            } else {
+              setUserProfile(null);
+            }
+          } else {
+            console.warn("User not found in users collection");
+            setUserProfile(null);
+          }
+        } catch (error) {
+          console.error("Error fetching user role:", error);
           setUserProfile(null);
         }
-      } catch (error) {
-        console.log(error);
-      } finally {
-        setInitialLoading(false);
+      } else {
+        setUser(null);
+        setUserProfile(null);
+
+        // cleanup if user logs out
+        if (unsubscribeProfile) {
+          unsubscribeProfile();
+          unsubscribeProfile = null;
+        }
       }
+
+      setInitialLoading(false);
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribeAuth();
+
+      // cleanup on unmount
+      if (unsubscribeProfile) {
+        unsubscribeProfile();
+      }
+    };
   }, []);
 
   if (initialLoading) {
@@ -433,8 +531,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         loading,
         user,
         userProfile,
-        fetchUserProfile,
-
         // Phone Auth
         phoneNumber,
         otpSent,

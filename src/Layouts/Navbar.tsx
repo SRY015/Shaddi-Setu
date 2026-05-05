@@ -37,7 +37,7 @@ const Navbar = () => {
     }`;
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-50 bg-[#fdf8f9]/80 backdrop-blur-xl shadow-[0_10px_30px_-15px_rgba(177,43,49,0.15)]">
+    <nav className="fixed top-0 left-0 w-full z-1000 bg-[#fdf8f9]/80 backdrop-blur-xl shadow-[0_10px_30px_-15px_rgba(177,43,49,0.15)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
@@ -74,7 +74,7 @@ const Navbar = () => {
               <div className="ml-4">
                 <img
                   src={
-                    userProfile?.profileImage ||
+                    userProfile?.profilePicture ||
                     "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                   }
                   alt="Profile"

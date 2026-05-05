@@ -12,7 +12,7 @@ import {
   doc,
   updateDoc,
 } from "firebase/firestore";
-import { COLLECTIONS, db } from "../../../Config/firebaseConfig";
+import { db } from "../../../Config/firebaseConfig"; // COLLECTIONS,
 import uploadToCloudinary from "../../../Utils/uploadToCloudinary";
 import { toast } from "react-toastify";
 import { warningOpts, successOpts } from "../../../Config/toast";
@@ -23,7 +23,7 @@ interface UserProfile {
   email: string;
   phone: string;
   role: string;
-  profileImage: string;
+  profilePicture: string;
 }
 
 const PortfolioManagement = ({
@@ -41,7 +41,10 @@ const PortfolioManagement = ({
       if (!userProfile?.uid) return;
 
       const q = query(
-        collection(db, COLLECTIONS.portfolios),
+        collection(
+          db,
+          `graminVivah/default/artists/${userProfile.uid}/portfolios`,
+        ),
         where("userId", "==", userProfile.uid),
       );
 
@@ -100,16 +103,22 @@ const PortfolioManagement = ({
 
       const type = file.type.startsWith("video") ? "video" : "image";
 
-      const docRef = await addDoc(collection(db, COLLECTIONS.portfolios), {
-        userId: userProfile.uid,
-        image: url,
-        publicId,
-        type,
-        title: "New Work",
-        subtitle: "Click edit to update",
-        featured: false,
-        createdAt: new Date(),
-      });
+      const docRef = await addDoc(
+        collection(
+          db,
+          `graminVivah/default/artists/${userProfile.uid}/portfolios`,
+        ),
+        {
+          userId: userProfile.uid,
+          image: url,
+          publicId,
+          type,
+          title: "New Work",
+          subtitle: "Click edit to update",
+          featured: false,
+          createdAt: new Date(),
+        },
+      );
 
       setItems((prev) => [
         {
@@ -136,7 +145,13 @@ const PortfolioManagement = ({
   // ================= DELETE =================
   const removeItem = async (item: any) => {
     try {
-      await deleteDoc(doc(db, COLLECTIONS.portfolios, item.id));
+      await deleteDoc(
+        doc(
+          db,
+          `graminVivah/default/artists/${userProfile?.uid}/portfolios`,
+          item.id,
+        ),
+      );
 
       // ❗ FRONTEND LIMITATION: cannot securely delete Cloudinary asset
       // So we skip Cloudinary delete for now
@@ -160,9 +175,16 @@ const PortfolioManagement = ({
 
     await Promise.all(
       updated.map((item) =>
-        updateDoc(doc(db, COLLECTIONS.portfolios, item.id), {
-          featured: item.featured,
-        }),
+        updateDoc(
+          doc(
+            db,
+            `graminVivah/default/artists/${userProfile?.uid}/portfolios`,
+            item.id,
+          ),
+          {
+            featured: item.featured,
+          },
+        ),
       ),
     );
   };
@@ -176,10 +198,17 @@ const PortfolioManagement = ({
       return;
     }
 
-    await updateDoc(doc(db, COLLECTIONS.portfolios, editingItem.id), {
-      title: editingItem.title,
-      subtitle: editingItem.subtitle,
-    });
+    await updateDoc(
+      doc(
+        db,
+        `graminVivah/default/artists/${userProfile?.uid}/portfolios`,
+        editingItem.id,
+      ),
+      {
+        title: editingItem.title,
+        subtitle: editingItem.subtitle,
+      },
+    );
 
     setItems((prev) =>
       prev.map((item) => (item.id === editingItem.id ? editingItem : item)),

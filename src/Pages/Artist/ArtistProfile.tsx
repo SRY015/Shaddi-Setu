@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import Navbar from "../../Layouts/Navbar";
 import { FaCircleCheck, FaStar, FaArrowRightLong } from "react-icons/fa6";
 import {
@@ -6,8 +7,70 @@ import {
   MdPayments,
   MdOutlineSecurity,
 } from "react-icons/md";
+import { useParams } from "react-router-dom";
+import type {
+  ArtistProfile as ArtistProfileType,
+  ArtistPortfolio,
+} from "../../Types/artistTypes";
+import { collection, doc, getDoc, getDocs } from "firebase/firestore";
+import { COLLECTIONS, db } from "../../Config/firebaseConfig";
+import { IoMdChatbubbles } from "react-icons/io";
+import { IoCall } from "react-icons/io5";
 
 const ArtistProfile = () => {
+  const { artistId } = useParams();
+
+  const [artistDetails, setArtistDetails] = useState<ArtistProfileType | null>(
+    null,
+  );
+  const [artistPortfolio, setArtistPortfolio] = useState<ArtistPortfolio[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+
+  useEffect(() => {
+    const getArtistDetails = async () => {
+      if (!artistId) return;
+      try {
+        const docRef = doc(db, COLLECTIONS.artists, artistId);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          const data = docSnap.data() as ArtistProfileType;
+          setArtistDetails(data);
+          const portfolioRef = collection(
+            db,
+            `${COLLECTIONS.artists}/${artistId}/portfolios`,
+          );
+          const portfolioSnapshot = await getDocs(portfolioRef);
+          const portfolioData = portfolioSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          })) as ArtistPortfolio[];
+          setArtistPortfolio(portfolioData);
+          console.log("Artist data : ", {
+            ...data,
+            portfolio: { ...portfolioData },
+          });
+        } else {
+          console.log("No such document!");
+          setArtistDetails(null);
+        }
+      } catch (error) {
+        console.error("Error fetching document:", error);
+      } finally {
+        setTimeout(() => {
+          setLoading(false);
+        }, 1000);
+      }
+    };
+
+    artistId && getArtistDetails();
+  }, [artistId]);
+
+  const featuredImage = artistPortfolio.find((item) => item.featured);
+
+  const remainingImages = artistPortfolio.filter(
+    (item) => item.id !== featuredImage?.id,
+  );
+
   return (
     <div className="bg-[#fdf8f9] text-[#1c1b1c] font-['Lexend'] selection:bg-[#ff9591] selection:text-[#8c0c1b]">
       {/* Custom Styles */}
@@ -45,237 +108,232 @@ const ArtistProfile = () => {
       {/* Top Navigation */}
       <Navbar />
 
-      <main className="pt-20 pb-32">
-        {/* Hero Header */}
-        <header className="max-w-7xl mx-auto px-4 md:px-8 mt-6">
-          <div className="relative h-112.5 md:h-137.5 rounded-2xl overflow-hidden heritage-shadow">
-            <img
-              src="https://lh3.googleusercontent.com/aida-public/AB6AXuBoHYZxJe1uhwFmjLE_MmAP35X4IRZNvTGfiaN-B4Lu6iutKZ5HSydBxIwYIXQs3okuXjjji_DjVZoEd9EikM_3dwMw5ihKEia598OpUNE-PQDr_0wBfaA3R0_MARQzcQFp38LGeCrNuoPY32P7KnYdNGcxOoo6SJ9Nps-U0VGqdlJFNw7Yw4HhJiXVV7ViOlYGDKtm-CGur8s9wBEF6nXSukS3A_Linga_QQlNo9TFtbzgibNia5f72H-TTO1X1tlmG7dqW_ZRySFs"
-              alt="Bride"
-              className="w-full h-full object-cover"
-            />
-
-            <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
-
-            <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
-              <div className="text-white space-y-3">
-                <div className="flex flex-wrap items-center gap-3">
-                  <h1 className="text-3xl md:text-5xl font-extrabold font-['Plus_Jakarta_Sans']">
-                    Priya Sharma
-                  </h1>
-
-                  <span className="bg-[#735c00] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
-                    <span
-                      className="material-symbols-outlined text-[14px]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      <MdVerifiedUser />
-                    </span>
-                    VERIFIED
-                  </span>
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-sm md:text-base font-medium opacity-90">
-                  <span className="flex items-center gap-1">
-                    <span
-                      className="material-symbols-outlined text-[#735c00]"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      <FaStar />
-                    </span>
-                    4.9 (124 Reviews)
-                  </span>
-
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined">
-                      <MdLocationOn />
-                    </span>
-                    Jaipur, Rajasthan
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined">
-                      <MdPayments />
-                    </span>
-                    From ₹25,000
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Trust Ribbon */}
-        <div className="w-full mt-8 overflow-hidden">
-          <div className="bg-[#e6e1e2] py-3 px-6 whitespace-nowrap animate-marquee flex items-center gap-12">
-            {[
-              "Booked in Malviya Nagar today",
-              "Trusted by 500+ Rajasthani Families",
-              "Top Rated Bridal Makeup 2023",
-              "Last Booking: 2 hours ago",
-            ].map((item, index) => (
-              <span
-                key={index}
-                className="text-[#4d4635] text-sm flex items-center gap-2"
-              >
-                <span className="material-symbols-outlined text-[#006d2f]">
-                  <FaCircleCheck />
-                </span>
-                {item}
-              </span>
-            ))}
-          </div>
+      {loading ? (
+        <div className="flex items-center justify-center h-screen w-full bg-transparent">
+          <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
         </div>
+      ) : (
+        <>
+          <main className="pt-20 pb-32">
+            {/* Hero Header */}
+            <header className="max-w-7xl mx-auto px-4 md:px-8 mt-6">
+              <div className="relative h-112.5 md:h-137.5 rounded-2xl overflow-hidden heritage-shadow">
+                <img
+                  src={
+                    featuredImage?.image ||
+                    "https://lh3.googleusercontent.com/aida-public/AB6AXuBoHYZxJe1uhwFmjLE_MmAP35X4IRZNvTGfiaN-B4Lu6iutKZ5HSydBxIwYIXQs3okuXjjji_DjVZoEd9EikM_3dwMw5ihKEia598OpUNE-PQDr_0wBfaA3R0_MARQzcQFp38LGeCrNuoPY32P7KnYdNGcxOoo6SJ9Nps-U0VGqdlJFNw7Yw4HhJiXVV7ViOlYGDKtm-CGur8s9wBEF6nXSukS3A_Linga_QQlNo9TFtbzgibNia5f72H-TTO1X1tlmG7dqW_ZRySFs"
+                  }
+                  alt="Bride"
+                  className="w-full h-full object-cover"
+                />
 
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto px-4 md:px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
-          {/* Left Column */}
-          <div className="lg:col-span-2 space-y-16">
-            {/* About */}
-            <section>
-              <h2 className="text-2xl font-bold text-[#b12b31] font-['Plus_Jakarta_Sans'] mb-4">
-                About the Artist
-              </h2>
+                <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
 
-              <p className="text-[#4d4635] text-lg leading-relaxed">
-                With over 8 years of experience in bridal artistry, I specialize
-                in creating timeless, high-definition looks that celebrate
-                heritage while embracing modern elegance. My approach is
-                centered on enhancing your natural beauty for your most special
-                day, using premium international products that withstand the
-                vibrant energy of Indian weddings.
-              </p>
-            </section>
+                <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                  <div className="text-white space-y-3">
+                    <div className="flex flex-wrap items-center gap-3">
+                      <h1 className="text-3xl md:text-5xl font-extrabold font-['Plus_Jakarta_Sans']">
+                        {artistDetails?.fullName}
+                      </h1>
 
-            {/* Portfolio */}
-            <section>
-              <div className="flex justify-between items-end mb-8">
-                <h2 className="text-2xl font-bold text-[#b12b31] font-['Plus_Jakarta_Sans']">
-                  Signature Portfolio
-                </h2>
+                      <span className="bg-[#735c00] text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                        <span
+                          className="material-symbols-outlined text-[14px]"
+                          style={{ fontVariationSettings: "'FILL' 1" }}
+                        >
+                          <MdVerifiedUser />
+                        </span>
+                        VERIFIED
+                      </span>
+                    </div>
 
-                <span className="text-[#735c00] font-semibold flex items-center gap-1 cursor-pointer">
-                  View All
-                  <span className="material-symbols-outlined">
-                    <FaArrowRightLong />
-                  </span>
-                </span>
-              </div>
+                    <div className="flex flex-wrap items-center gap-4 text-sm md:text-base font-medium opacity-90">
+                      <span className="flex items-center gap-1">
+                        <span
+                          className="material-symbols-outlined text-[#735c00]"
+                          style={{ fontVariationSettings: "'FILL' 1" }}
+                        >
+                          <FaStar />
+                        </span>
+                        4.9 (124 Reviews)
+                      </span>
 
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="col-span-2 row-span-2 rounded-2xl overflow-hidden heritage-shadow aspect-square">
-                  <img
-                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsqlWrr4opneiivw4f3X_Lk-pngqtYM9WEcqnP2gx91_6dd6eFM1LisfMcjlj8pn_atDUCRuSpQg7IlEn76M8JwtvdMo4oNOibMAKVRZ7CAnKRyU6YZ7WtruKOKqr3xBgJXRgCy5kykyADpdSMZjWtBsm2pU0tGpnK9X_QWXQE1ANQQueiXUGShzDD1LJe492h1oUVHIJ2aA3pLKRIXjsXwfB-PjRCYaS3OSe76xoQapV8ew1tW11cdbJsG-28joywlIMBjWN3V7qG"
-                    alt=""
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {[
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuDZLhb90oT5BXyCkpx3Gu3ETln03ZsZXeWNafBtop98kkNO6VPoaGwHY0zeaYiYpgMyGasDry9-egmsqe9yZbyAZDvWzZn53Idoydm0CAXsbuWy4cmmM-2czFMdZKELNbVs9z3b_k2syW58Cj-zFEEPNSkvECpP6dTHaRK7Te1rbII5mGtjufghbjWZECn-Dnud4XBgYEy-wXpoBjowM1vtLFtlX4o5_CG58xt1V21GfH2D8-1NiIGdBS2ORpH4y3RIXHpvlP8tF0Zi",
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuCp6rrrIAl8zMqnpZCpX4c1xMhig1mK_vpeSNZwEAonOdiPsmEL6DMGNhVSGtfPPgotmQ8lmQZcMFa0T9DH3RcLm3U52t1cUxH-kNqal444Xb7q_fWtHf5ENycOaQt7x2E7TVXpb7SZ2XWIWD8tanpDhbPLn4sD_6dlerAIaE-cia8n3_SMFhVckmZoLexKT8xeazwUBa78AgjMRff8ESJO6l4C0H98PUGTh4m5KKsmaliv4PC7Ig1DzSsvF-988zB3nF7PJRKtqRGS",
-                  "https://lh3.googleusercontent.com/aida-public/AB6AXuBTcbGRtarhOpWD0pvW4iT7iuqjKr3r3CMf_s5xGfTlUV2tvur4zoLphYfXWIRzCr5mvk0TgEE0mYTa0i82Nk62UpuuamV6G0ccTBV2oQb1l1gL6nIiTePWBmNaOkkHUWCRSqpaPyIi8pNW8pU3WnTVGr1tNmYDWiA85fIZHcmtvl33Dh9l_lSYsZwnedbymArU9b1UWV4xcSeneA_AJtW6l0N0aqwK93nOa8Kq0Kwmn-sapRKWTALu4DOumGTNM5QYaW9TRGCkspvR",
-                ].map((img, i) => (
-                  <div
-                    key={i}
-                    className="rounded-2xl overflow-hidden heritage-shadow aspect-square"
-                  >
-                    <img
-                      src={img}
-                      alt=""
-                      className="w-full h-full object-cover"
-                    />
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined">
+                          <MdLocationOn />
+                        </span>
+                        {artistDetails?.location}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="material-symbols-outlined">
+                          <MdPayments />
+                        </span>
+                        {`From ₹ ${artistDetails?.startingPrice}`}
+                      </span>
+                    </div>
                   </div>
+                </div>
+              </div>
+            </header>
+
+            {/* Trust Ribbon */}
+            <div className="w-full mt-8 overflow-hidden">
+              <div className="bg-[#e6e1e2] py-3 px-6 whitespace-nowrap animate-marquee flex items-center gap-12">
+                {[
+                  "Booked in Malviya Nagar today",
+                  "Trusted by 500+ Rajasthani Families",
+                  "Top Rated Bridal Makeup 2023",
+                  "Last Booking: 2 hours ago",
+                ].map((item, index) => (
+                  <span
+                    key={index}
+                    className="text-[#4d4635] text-sm flex items-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-[#006d2f]">
+                      <FaCircleCheck />
+                    </span>
+                    {item}
+                  </span>
                 ))}
               </div>
-            </section>
-          </div>
+            </div>
 
-          {/* Right Sticky Column */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-28 space-y-8">
-              <div className="bg-white p-8 rounded-2xl heritage-shadow border border-[#d0c5af]/20">
-                <h2 className="text-xl font-bold text-[#b12b31] font-['Plus_Jakarta_Sans'] mb-6">
-                  Service Packages
-                </h2>
+            {/* Main Content */}
+            <div className="max-w-7xl mx-auto px-4 md:px-8 mt-12 grid grid-cols-1 lg:grid-cols-3 gap-12">
+              {/* Left Column */}
+              <div className="lg:col-span-2 space-y-16">
+                {/* About */}
+                <section>
+                  <h2 className="text-2xl font-bold text-[#b12b31] font-['Plus_Jakarta_Sans'] mb-4">
+                    About the Artist
+                  </h2>
 
-                <div className="space-y-6">
-                  {[
-                    {
-                      title: "Bridal HD Makeup",
-                      price: "₹25,000",
-                    },
-                    {
-                      title: "The Heritage Glow",
-                      price: "₹65,000",
-                    },
-                    {
-                      title: "Guest Makeup",
-                      price: "₹5,000",
-                    },
-                  ].map((pkg, i) => (
-                    <div
-                      key={i}
-                      className={
-                        i !== 2 ? "pb-6 border-b border-[#e6e1e2]" : ""
-                      }
-                    >
-                      <div className="flex justify-between items-start">
-                        <h3 className="font-bold text-lg">{pkg.title}</h3>
-                        <span className="font-bold text-[#b12b31]">
-                          {pkg.price}
-                        </span>
-                      </div>
+                  <p className="text-[#4d4635] text-lg leading-relaxed">
+                    {artistDetails?.bio}
+                  </p>
+                </section>
+
+                {/* Portfolio */}
+                <section>
+                  <div className="flex justify-between items-end mb-8">
+                    <h2 className="text-2xl font-bold text-[#b12b31] font-['Plus_Jakarta_Sans']">
+                      Signature Portfolio
+                    </h2>
+
+                    <span className="text-[#735c00] font-semibold flex items-center gap-1 cursor-pointer">
+                      View All
+                      <span className="material-symbols-outlined">
+                        <FaArrowRightLong />
+                      </span>
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    <div className="col-span-2 row-span-2 rounded-2xl overflow-hidden heritage-shadow aspect-square">
+                      <img
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuCsqlWrr4opneiivw4f3X_Lk-pngqtYM9WEcqnP2gx91_6dd6eFM1LisfMcjlj8pn_atDUCRuSpQg7IlEn76M8JwtvdMo4oNOibMAKVRZ7CAnKRyU6YZ7WtruKOKqr3xBgJXRgCy5kykyADpdSMZjWtBsm2pU0tGpnK9X_QWXQE1ANQQueiXUGShzDD1LJe492h1oUVHIJ2aA3pLKRIXjsXwfB-PjRCYaS3OSe76xoQapV8ew1tW11cdbJsG-28joywlIMBjWN3V7qG"
+                        alt=""
+                        className="w-full h-full object-cover"
+                      />
                     </div>
-                  ))}
-                </div>
+
+                    {remainingImages.slice(0, 3).map((item, i) => (
+                      <div
+                        key={i}
+                        className="rounded-2xl overflow-hidden heritage-shadow aspect-square"
+                      >
+                        <img
+                          src={item.image}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </section>
               </div>
 
-              <div className="bg-[#b12b31]/5 p-6 rounded-2xl flex gap-4">
-                <span className="material-symbols-outlined text-[#b12b31] text-3xl">
-                  <MdOutlineSecurity />
-                </span>
+              {/* Right Sticky Column */}
+              <div className="lg:col-span-1">
+                <div className="sticky top-28 space-y-8">
+                  <div className="bg-white p-8 rounded-2xl heritage-shadow border border-[#d0c5af]/20">
+                    <h2 className="text-xl font-bold text-[#b12b31] font-['Plus_Jakarta_Sans'] mb-6">
+                      Service Packages
+                    </h2>
 
-                <div>
-                  <h4 className="font-bold text-[#b12b31]">Heritage Secure™</h4>
+                    <div className="space-y-6">
+                      {artistDetails?.servicePackages?.map((pkg, i) => (
+                        <div
+                          key={i}
+                          className={
+                            i !== 2 ? "pb-6 border-b border-[#e6e1e2]" : ""
+                          }
+                        >
+                          <div className="flex justify-between items-start">
+                            <h3 className="font-bold text-lg">{pkg.title}</h3>
+                            <span className="font-bold text-[#b12b31]">
+                              {`₹${pkg.price}`}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
 
-                  <p className="text-xs text-[#4d4635]">
-                    Your payment is protected. Artist only receives payment
-                    after service completion.
-                  </p>
+                  <div className="bg-[#b12b31]/5 p-6 rounded-2xl flex gap-4">
+                    <span className="material-symbols-outlined text-[#b12b31] text-3xl">
+                      <MdOutlineSecurity />
+                    </span>
+
+                    <div>
+                      <h4 className="font-bold text-[#b12b31]">
+                        Heritage Secure™
+                      </h4>
+
+                      <p className="text-xs text-[#4d4635]">
+                        Your payment is protected. Artist only receives payment
+                        after service completion.
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+          </main>
+
+          {/* Sticky Bottom CTA */}
+          <div className="fixed bottom-0 left-0 w-full z-50 p-4 glass-effect shadow-[0_-10px_30px_-15px_rgba(177,43,49,0.15)]">
+            <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="hidden md:flex flex-col">
+                <span className="text-xs text-[#4d4635]">Starting from</span>
+                <span className="text-xl font-bold text-[#b12b31] font-['Plus_Jakarta_Sans']">
+                  {`₹${artistDetails?.startingPrice}`}
+                </span>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                <button className="h-14 px-6 rounded-xl bg-[#006d2f] text-white font-bold flex items-center justify-center gap-2 cursor-pointer">
+                  <span className="material-symbols-outlined">
+                    <IoCall />
+                  </span>
+                  Call Now
+                </button>
+
+                <button className="h-14 px-6 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-2 cursor-pointer">
+                  <span className="material-symbols-outlined">
+                    <IoMdChatbubbles />
+                  </span>
+                  WhatsApp
+                </button>
+
+                <button className="h-14 px-10 rounded-xl bg-[#b12b31] text-white font-bold cursor-pointer">
+                  Request Booking
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </main>
-
-      {/* Sticky Bottom CTA */}
-      <div className="fixed bottom-0 left-0 w-full z-50 p-4 glass-effect shadow-[0_-10px_30px_-15px_rgba(177,43,49,0.15)]">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="hidden md:flex flex-col">
-            <span className="text-xs text-[#4d4635]">Starting from</span>
-            <span className="text-xl font-bold text-[#b12b31] font-['Plus_Jakarta_Sans']">
-              ₹25,000
-            </span>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-            <button className="h-14 px-6 rounded-xl bg-[#006d2f] text-white font-bold flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined">phone</span>
-              Call Now
-            </button>
-
-            <button className="h-14 px-6 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-2">
-              <span className="material-symbols-outlined">chat_bubble</span>
-              WhatsApp
-            </button>
-
-            <button className="h-14 px-10 rounded-xl bg-[#b12b31] text-white font-bold">
-              Request Booking
-            </button>
-          </div>
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 };

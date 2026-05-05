@@ -5,19 +5,22 @@ import {
   MdOutlineRadioButtonUnchecked,
 } from "react-icons/md";
 import { FaCheckCircle } from "react-icons/fa";
+import type { ArtistProfile } from "../../../Types/artistTypes";
 
-interface UserProfile {
-  fullName: string;
-  email: string;
-  phone: string;
-  role: string;
-  profileImage: string;
-}
+// interface UserProfile {
+//   fullName: string;
+//   email: string;
+//   phone: string;
+//   role: string;
+//   profileImage: string;
+// }
 
 const DashboardContent = ({
   userProfile,
+  updateActiveTab,
 }: {
-  userProfile: UserProfile | null;
+  userProfile: ArtistProfile | null;
+  updateActiveTab: (tab: string) => void;
 }) => {
   return (
     <div className="space-y-6">
@@ -33,27 +36,31 @@ const DashboardContent = ({
           <div className="bg-white rounded-2xl p-6 md:p-8 shadow-[0_10px_30px_-10px_rgba(177,43,49,0.15)]">
             <div className="flex flex-col md:flex-row justify-between gap-6 mb-8">
               <div>
-                <h3 className="text-xl font-bold">Complete Your Profile</h3>
+                <h3 className="text-xl font-bold">{`${userProfile?.profileCompletion === 100 ? "Update Your Profile" : "Complete Your Profile"}`}</h3>
                 <p className="text-sm text-stone-500">
                   Higher completion leads to 3x more bookings
                 </p>
               </div>
-              {/* <div className="text-[#b12b31] font-bold text-md border-2 rounded-full flex items-center px-2 py-3">
-              65%
-            </div> */}
-              <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-[#bf262e] animate-ping opacity-20"></div>
-                <div className="relative text-[#b12b31] font-bold text-sm border-2 rounded-full flex items-center px-2 py-3">
-                  65%
+              {userProfile?.profileCompletion !== 100 && (
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-[#bf262e] animate-ping opacity-20"></div>
+                  <div className="relative text-[#b12b31] font-bold text-sm border-2 rounded-full flex items-center px-2 py-3">
+                    {`${userProfile?.profileCompletion || 40}%`}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {["Professional Details", "Portfolio Photos"].map((item) => (
                 <div
                   key={item}
-                  className="p-4 rounded-xl bg-[#f7f2f3] flex items-center space-x-3"
+                  onClick={() =>
+                    item === "Professional Details"
+                      ? updateActiveTab("profile")
+                      : updateActiveTab("portfolio")
+                  }
+                  className="p-4 rounded-xl bg-[#f7f2f3] flex items-center space-x-3 cursor-pointer"
                 >
                   <span className="material-symbols-outlined text-[#b12b31]">
                     {item === "Professional Details" ? (

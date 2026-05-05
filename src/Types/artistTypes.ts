@@ -1,3 +1,5 @@
+import type { FieldValue } from "firebase/firestore";
+
 export interface ServicePackage {
   id: string;
   title: string;
@@ -14,6 +16,17 @@ export interface ServiceHours {
   isOff: boolean;
 }
 
+export interface ArtistPortfolio {
+  id?: string;
+  title: string;
+  subtitle: string;
+  userId: string;
+  featured?: boolean;
+  type: string;
+  image: string;
+  createdAt: FieldValue;
+}
+
 export interface ArtistProfile {
   uid?: string;
   fullName: string;
@@ -28,8 +41,10 @@ export interface ArtistProfile {
   travelDistance?: number;
   offDays?: string[];
   servicePackages?: ServicePackage[];
-  profileImage?: string;
+  startingPrice?: number;
+  profilePicture?: string;
   verified?: boolean;
   role?: string;
   serviceHours?: ServiceHours[];
+  profileCompletion?: number;
 }

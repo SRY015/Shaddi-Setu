@@ -168,7 +168,7 @@ export default function ProfileSettings({
         profileImageUrl = await uploadToCloudinary(profilePic);
       }
 
-      await updateDoc(doc(db, COLLECTIONS.users, userProfile.uid), {
+      await updateDoc(doc(db, COLLECTIONS.customers, userProfile.uid), {
         fullName: formData.fullName,
         phone: formData.phone,
         dob: formData.dob || "",
@@ -177,7 +177,14 @@ export default function ProfileSettings({
         language: formData.language || "",
         whatsappUpdates: formData.whatsappUpdates || false,
         emailAlerts: formData.emailAlerts || false,
-        profileImage: profileImageUrl,
+        profilePicture: profileImageUrl,
+        updatedAt: new Date(),
+      });
+
+      await updateDoc(doc(db, COLLECTIONS.users, userProfile.uid), {
+        fullName: formData.fullName,
+        phone: formData.phone,
+        profilePicture: profileImageUrl,
         updatedAt: new Date(),
       });
 

@@ -343,7 +343,7 @@ interface FormData {
   phone: string;
   email: string;
   password: string;
-  serviceCategory: "Makeup Artist" | "Photographer";
+  serviceCategory: "Makeup Artist" | "photographer";
   profileImage: File | null;
 }
 
@@ -382,7 +382,7 @@ const ArtistRegistration = () => {
     }));
   };
 
-  const handleServiceChange = (value: "Makeup Artist" | "Photographer") => {
+  const handleServiceChange = (value: "Makeup Artist" | "photographer") => {
     setFormData((prev) => ({
       ...prev,
       serviceCategory: value,
@@ -464,6 +464,17 @@ const ArtistRegistration = () => {
         profileImageUrl = await uploadToCloudinary(formData.profileImage);
       }
 
+      // Save artist data to Firestore
+      await setDoc(doc(db, COLLECTIONS.artists, uid), {
+        uid,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        email: formData.email,
+        role: formData.serviceCategory,
+        profilePicture: profileImageUrl,
+        createdAt: serverTimestamp(),
+      });
+
       // Save User Data to Firestore
       await setDoc(doc(db, COLLECTIONS.users, uid), {
         uid,
@@ -471,11 +482,11 @@ const ArtistRegistration = () => {
         phone: formData.phone,
         email: formData.email,
         role: formData.serviceCategory,
-        profileImage: profileImageUrl,
+        profilePicture: profileImageUrl,
         createdAt: serverTimestamp(),
       });
 
-      toast("Registration successful", successOpts);
+      toast("Artist registration successful", successOpts);
 
       setTimeout(() => {
         navigate("/artist-dashboard");
@@ -692,9 +703,9 @@ const ArtistRegistration = () => {
 
                   <button
                     type="button"
-                    onClick={() => handleServiceChange("Photographer")}
+                    onClick={() => handleServiceChange("photographer")}
                     className={`p-4 rounded-2xl border-2 font-bold transition-all ${
-                      formData.serviceCategory === "Photographer"
+                      formData.serviceCategory === "photographer"
                         ? "border-[#b12b31] bg-[#fef2f2]"
                         : "border-[#e5e1da] bg-white"
                     }`}

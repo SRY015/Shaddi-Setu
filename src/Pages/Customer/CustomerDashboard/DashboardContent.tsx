@@ -5,7 +5,7 @@ interface UserProfile {
   email: string;
   phone: string;
   role: string;
-  profileImage: string;
+  profilePicture: string;
 }
 
 export default function DashboardContent({

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import Footer from "../Layouts/Footer";
 import Navbar from "../Layouts/Navbar";
 import { useNavigate } from "react-router-dom";
@@ -6,48 +7,47 @@ import {
   MdFilterList,
   MdVerifiedUser,
   MdOutlineVerified,
+  MdCurrencyRupee,
 } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa6";
 import { IoLocation, IoStar, IoStarHalf, IoStarOutline } from "react-icons/io5";
+import { collection, query, where, getDocs } from "firebase/firestore";
+import { db, COLLECTIONS } from "../Config/firebaseConfig";
 
 const SearchResultsPage = () => {
-  const artistCards = [
-    {
-      name: "Priya Sharma Makeup Studio",
-      location: "Udaipur, Rajasthan",
-      price: "₹12,500",
-      rating: "4.8",
-      description:
-        "Specializing in traditional Rajasthani bridal transformations with 10+ years of experience. High-end products and personalized attention for your big day.",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuBWccKr5f8Aw8Gg7VNS29hbTl0F9ecU6eEh8Gce3oOP68nU6obpEZi6v_1INVEfpZHwrMJUMclLxvUXnLjfO17X_Y58eeXOQflwILoXArBXNoo1BRhI3YhMnLDmy7BbGjckV4C00NHMvzngJ9Q6d7ezgt_LHI1bjXZhdNJZxhCCn1uitwlIWC2RR-rdwH2HuYrfWI9GZFAWsZCewGqFzsmV6DEHWgTfSWVd5RuxN09pqb15S7gl15zMnatFFWP6t4NapHI5xlOwIXPH",
-      stars: 4.5,
-    },
-    {
-      name: "Mehandi by Anjali",
-      location: "Palampur, HP",
-      price: "₹2,500",
-      rating: "5.0",
-      description:
-        "Organic handmade henna paste. Specializing in intricate bridal motifs and modern fusion patterns for guests and brides.",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCUFa25c_y7J1O7MpxyJhasJov8Kjmk5JialBaXiWlEi_UjhQMZVLUPwxlgz5FRlAOi6re4AIxV1gd16QZdzrHqULBNo_E3ElIEPEGrKoDPSozgH8--zjNWbZ0pmMwjHe1yR0XpP5LWd3vFxKfX7OrEt9MUxjwUeXxYn1IG-sSJGFrelYR6oRSd3PmyA5s_ZbUyKk6tOizwjvD1WHufctuVs6pXx3oIRfZY1AvMq-mIq9pzGxxZgKIT-ebAMAIqTbyHWwfdd1H4tZyN",
-      stars: 5,
-    },
-    {
-      name: "Heritage Frames Photography",
-      location: "Chandigarh",
-      price: "₹45,000",
-      rating: "4.2",
-      description:
-        "Capturing cinematic memories that last a lifetime. Candid specialists with a focus on heritage architecture and royal aesthetics.",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCI6ALL5GtwfrLArTAA9fmcX7AHYkva4siJ4efm10pRp39-df3klnQn6YGCvvcByATyCTS2b2140tZOuDe4o_9xOjeDxYGUwvloSRNLrMDvxJmmRB-jNsKpo-waUGnn3kZYXysrRmddgQGVk6CMDuzjxlsGU3boQjCD5X46YRgepz7FtS06eo1tEihBbxmmy_tWiPcwDrR-H3fSRmbWhJLiywbka9vbWV39oY-xN-6SNSEtqQ4dW_7C6zlvIY-aktcUz88DsFEjLV8W",
-      stars: 4,
-    },
-  ];
-
   const navigate = useNavigate();
+
+  const [artists, setArtists] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchArtists = async () => {
+      try {
+        setLoading(true);
+
+        const q = query(
+          collection(db, COLLECTIONS.artists),
+          where("role", "in", ["MakeupArtist", "Photographer"]),
+          where("profileCompletion", "==", 100),
+        );
+
+        const snap = await getDocs(q);
+
+        const data = snap.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        console.log("Artists data : ", data);
+        setArtists(data);
+      } catch (err) {
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchArtists();
+  }, []);
 
   const renderStars = (count: number) => {
     const fullStars = Math.floor(count);
@@ -226,105 +226,121 @@ const SearchResultsPage = () => {
               </div>
             </div>
           </aside>
-
           {/* Cards */}
-          <div className="flex-1 space-y-8">
-            {artistCards.map((artist, index) => (
-              <article
-                key={index}
-                className="group flex flex-col overflow-hidden rounded-[1.25rem] bg-white transition-transform hover:-translate-y-1 md:flex-row"
-                style={{
-                  boxShadow: "0 10px 30px -10px rgba(177, 43, 49, 0.15)",
-                }}
-              >
-                {/* Image */}
-                <div className="relative h-72 w-full overflow-hidden md:h-auto md:w-80">
-                  <img
-                    src={artist.image}
-                    alt={artist.name}
-                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
+          {!loading ? (
+            <div className="flex-1 space-y-8">
+              {artists.length !== 0 ? (
+                artists &&
+                artists.map((artist, index) => (
+                  <article
+                    key={index}
+                    className="group flex flex-col overflow-hidden rounded-[1.25rem] bg-white transition-transform hover:-translate-y-1 md:flex-row"
+                    style={{
+                      boxShadow: "0 10px 30px -10px rgba(177, 43, 49, 0.15)",
+                    }}
+                  >
+                    {/* Image */}
+                    <div className="relative h-64 w-full overflow-hidden md:h-auto md:w-80">
+                      <img
+                        src={artist.profileImage}
+                        alt={artist.fullName}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
 
-                  <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-lg bg-[#fed65b] px-3 py-1.5 text-xs font-bold text-[#745c00] shadow-sm">
-                    <span
-                      className="material-symbols-outlined text-sm"
-                      style={{ fontVariationSettings: "'FILL' 1" }}
-                    >
-                      <MdOutlineVerified />
-                    </span>
-                    Verified
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="flex flex-1 flex-col p-6 md:p-8">
-                  <div className="mb-4 flex flex-col justify-between gap-4 md:flex-row">
-                    <div>
-                      <h3 className="mb-1 text-2xl font-extrabold leading-tight font-['Plus_Jakarta_Sans']">
-                        {artist.name}
-                      </h3>
-
-                      <div className="flex flex-wrap items-center gap-3">
-                        <div className="flex items-center gap-1">
-                          {renderStars(artist.stars)}
-                          <span className="ml-1 text-sm font-bold">
-                            {artist.rating}
-                          </span>
-                        </div>
-
-                        <span className="text-[#d0c5af]">|</span>
-
-                        <div className="flex items-center gap-1 text-sm font-medium text-[#4d4635]">
-                          <span className="material-symbols-outlined text-sm">
-                            <IoLocation />
-                          </span>
-                          {artist.location}
-                        </div>
+                      <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-lg bg-[#fed65b] px-3 py-1.5 text-xs font-bold text-[#745c00] shadow-sm">
+                        <span
+                          className="material-symbols-outlined text-sm"
+                          style={{ fontVariationSettings: "'FILL' 1" }}
+                        >
+                          <MdOutlineVerified />
+                        </span>
+                        Verified
                       </div>
                     </div>
 
-                    <div className="text-right">
-                      <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#4d4635]">
-                        Starting from
-                      </span>
+                    {/* Content */}
+                    <div className="flex flex-1 flex-col p-6 md:p-8">
+                      <div className="mb-4 flex flex-col justify-between gap-2 md:flex-row">
+                        <div className="">
+                          <h3 className="mb-1 text-2xl font-extrabold leading-tight font-['Plus_Jakarta_Sans']">
+                            {artist.fullName}
+                          </h3>
 
-                      <span className="text-2xl font-extrabold text-[#b12b31] font-['Plus_Jakarta_Sans']">
-                        {artist.price}
-                      </span>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <div className="flex items-center gap-1">
+                              {renderStars(3.5)}
+                              <span className="ml-1 text-sm font-bold">
+                                {3.5}
+                              </span>
+                            </div>
+
+                            <span className="text-[#d0c5af]">|</span>
+
+                            <div className="flex items-center gap-1 text-sm font-medium text-[#4d4635]">
+                              <span className="material-symbols-outlined text-sm">
+                                <IoLocation />
+                              </span>
+                              {artist.location}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-right min-w-36">
+                          <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#4d4635]">
+                            Starting from
+                          </span>
+                          <div className="flex items-center space-x-1 justify-end">
+                            <MdCurrencyRupee className="text-[#b12b31]" />
+                            <span className="text-2xl font-extrabold text-[#b12b31] font-['Plus_Jakarta_Sans']">
+                              {artist?.startingPrice}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <p className="mb-8 ml-2 text-sm leading-relaxed text-[#4d4635]">
+                        {artist?.bio}
+                      </p>
+
+                      {/* Buttons */}
+                      <div className="mt-auto flex flex-wrap gap-3">
+                        <button className="flex h-14 min-w-35 flex-1 items-center justify-center gap-2 rounded-xl bg-[#b12b31] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
+                          <span className="material-symbols-outlined">
+                            <MdCall />
+                          </span>
+                          Call Now
+                        </button>
+
+                        <button className="flex h-14 min-w-35 flex-1 items-center justify-center gap-2 rounded-xl bg-[#006d2f] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
+                          <span className="material-symbols-outlined">
+                            <FaWhatsapp />
+                          </span>
+                          WhatsApp
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            navigate(`/artist-profile/${artist.uid}`)
+                          }
+                          className="h-14 w-full rounded-xl bg-[#ece7e8] px-6 font-bold transition-colors hover:bg-[#e6e1e2] md:w-auto font-['Plus_Jakarta_Sans'] cursor-pointer"
+                        >
+                          View Profile
+                        </button>
+                      </div>
                     </div>
-                  </div>
-
-                  <p className="mb-8 text-sm leading-relaxed text-[#4d4635]">
-                    {artist.description}
-                  </p>
-
-                  {/* Buttons */}
-                  <div className="mt-auto flex flex-wrap gap-3">
-                    <button className="flex h-14 min-w-35 flex-1 items-center justify-center gap-2 rounded-xl bg-[#b12b31] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
-                      <span className="material-symbols-outlined">
-                        <MdCall />
-                      </span>
-                      Call Now
-                    </button>
-
-                    <button className="flex h-14 min-w-35 flex-1 items-center justify-center gap-2 rounded-xl bg-[#006d2f] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
-                      <span className="material-symbols-outlined">
-                        <FaWhatsapp />
-                      </span>
-                      WhatsApp
-                    </button>
-
-                    <button
-                      onClick={() => navigate("/artist-profile")}
-                      className="h-14 w-full rounded-xl bg-[#ece7e8] px-6 font-bold transition-colors hover:bg-[#e6e1e2] md:w-auto font-['Plus_Jakarta_Sans'] cursor-pointer"
-                    >
-                      View Profile
-                    </button>
-                  </div>
+                  </article>
+                ))
+              ) : (
+                <div className="flex items-center justify-center h-1/3 w-full bg-transparent">
+                  No artist found
                 </div>
-              </article>
-            ))}
-          </div>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center h-screen w-full bg-transparent">
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          )}
         </div>
       </main>
 

@@ -37,6 +37,10 @@ const ArtistDashboard: React.FC = () => {
 
   const { userProfile } = useAuth();
 
+  const updateActiveTab = (tab: string) => {
+    setActiveTab(tab);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case "portfolio":
@@ -48,7 +52,12 @@ const ArtistDashboard: React.FC = () => {
       case "profile":
         return <Profile userProfile={userProfile} />;
       default:
-        return <DashboardContent userProfile={userProfile} />;
+        return (
+          <DashboardContent
+            userProfile={userProfile}
+            updateActiveTab={updateActiveTab}
+          />
+        );
     }
   };
 

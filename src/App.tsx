@@ -54,7 +54,7 @@ const appRouter = createBrowserRouter([
         element: <ProfileCompletion />,
       },
       {
-        path: "artist-profile",
+        path: "artist-profile/:artistId",
         element: <ArtistProfile />,
       },
       {
