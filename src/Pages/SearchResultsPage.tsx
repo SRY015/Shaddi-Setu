@@ -10,15 +10,21 @@ import {
   MdCurrencyRupee,
 } from "react-icons/md";
 import { FaWhatsapp } from "react-icons/fa6";
+import { FaRegEye } from "react-icons/fa";
 import { IoLocation, IoStar, IoStarHalf, IoStarOutline } from "react-icons/io5";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db, COLLECTIONS } from "../Config/firebaseConfig";
+import { SaveArtistButton } from "../Components/SaveArtistButton";
 
 const SearchResultsPage = () => {
   const navigate = useNavigate();
 
   const [artists, setArtists] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const handleSaveLoginRequired = () => {
+    navigate("/user-login");
+  };
 
   useEffect(() => {
     const fetchArtists = async () => {
@@ -304,27 +310,37 @@ const SearchResultsPage = () => {
 
                       {/* Buttons */}
                       <div className="mt-auto flex flex-wrap gap-3">
-                        <button className="flex h-14 min-w-35 flex-1 items-center justify-center gap-2 rounded-xl bg-[#b12b31] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
+                        <button className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#b12b31] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
                           <span className="material-symbols-outlined">
                             <MdCall />
                           </span>
                           Call Now
                         </button>
 
-                        <button className="flex h-14 min-w-35 flex-1 items-center justify-center gap-2 rounded-xl bg-[#006d2f] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
+                        <button className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#006d2f] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
                           <span className="material-symbols-outlined">
                             <FaWhatsapp />
                           </span>
                           WhatsApp
                         </button>
 
+                        <SaveArtistButton
+                          artistId={artist.uid}
+                          variant="with-label"
+                          onLoginRequired={handleSaveLoginRequired}
+                          className="flex-1 md:flex-none cursor-pointer"
+                        />
+
                         <button
                           onClick={() =>
                             navigate(`/artist-profile/${artist.uid}`)
                           }
-                          className="h-14 w-full rounded-xl bg-[#ece7e8] px-6 font-bold transition-colors hover:bg-[#e6e1e2] md:w-auto font-['Plus_Jakarta_Sans'] cursor-pointer"
+                          className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#ece7e8] hover:bg-[#e6e1e2] font-bold shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer"
                         >
-                          View Profile
+                          <span className="material-symbols-outlined">
+                            <FaRegEye />
+                          </span>
+                          View
                         </button>
                       </div>
                     </div>

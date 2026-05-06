@@ -37,7 +37,7 @@ const ArtistDashboard: React.FC = () => {
       case "bookings":
         return <MyBookings />;
       case "saved-artists":
-        return <SavedArtists />;
+        return <SavedArtists userProfile={userProfile} />;
       case "profile":
         return <ProfileSettings userProfile={userProfile} />;
       default:

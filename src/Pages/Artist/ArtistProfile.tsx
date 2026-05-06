@@ -7,7 +7,7 @@ import {
   MdPayments,
   MdOutlineSecurity,
 } from "react-icons/md";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import type {
   ArtistProfile as ArtistProfileType,
   ArtistPortfolio,
@@ -16,15 +16,23 @@ import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { COLLECTIONS, db } from "../../Config/firebaseConfig";
 import { IoMdChatbubbles } from "react-icons/io";
 import { IoCall } from "react-icons/io5";
+import { SaveArtistButton } from "../../Components/SaveArtistButton";
+// import { useAuth } from "../../Context/AuthContext";
 
 const ArtistProfile = () => {
   const { artistId } = useParams();
+  const navigate = useNavigate();
+  // const { user } = useAuth();
 
   const [artistDetails, setArtistDetails] = useState<ArtistProfileType | null>(
     null,
   );
   const [artistPortfolio, setArtistPortfolio] = useState<ArtistPortfolio[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+
+  const handleSaveLoginRequired = () => {
+    navigate("/user-login");
+  };
 
   useEffect(() => {
     const getArtistDetails = async () => {
@@ -129,6 +137,15 @@ const ArtistProfile = () => {
 
                 <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/20 to-transparent" />
 
+                {/* Save Button in Top-Right */}
+                <div className="absolute top-6 right-6 z-10">
+                  <SaveArtistButton
+                    artistId={artistId || ""}
+                    variant="icon-only"
+                    onLoginRequired={handleSaveLoginRequired}
+                  />
+                </div>
+
                 <div className="absolute bottom-0 left-0 w-full p-6 md:p-12 flex flex-col md:flex-row md:items-end justify-between gap-6">
                   <div className="text-white space-y-3">
                     <div className="flex flex-wrap items-center gap-3">
@@ -177,8 +194,8 @@ const ArtistProfile = () => {
             </header>
 
             {/* Trust Ribbon */}
-            <div className="w-full mt-8 overflow-hidden">
-              <div className="bg-[#e6e1e2] py-3 px-6 whitespace-nowrap animate-marquee flex items-center gap-12">
+            <div className="w-full mt-8 overflow-hidden bg-[#e6e1e2]">
+              <div className="py-3 px-6 whitespace-nowrap animate-marquee flex items-center gap-12">
                 {[
                   "Booked in Malviya Nagar today",
                   "Trusted by 500+ Rajasthani Families",
@@ -325,6 +342,13 @@ const ArtistProfile = () => {
                   </span>
                   WhatsApp
                 </button>
+
+                <SaveArtistButton
+                  artistId={artistId || ""}
+                  variant="with-label"
+                  onLoginRequired={handleSaveLoginRequired}
+                  className="cursor-pointer"
+                />
 
                 <button className="h-14 px-10 rounded-xl bg-[#b12b31] text-white font-bold cursor-pointer">
                   Request Booking

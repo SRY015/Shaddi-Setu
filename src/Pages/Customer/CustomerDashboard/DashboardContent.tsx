@@ -1,4 +1,10 @@
-import { useState } from "react";
+import {
+  getDoc,
+  type DocumentData,
+  type DocumentReference,
+} from "firebase/firestore";
+import { useEffect, useState } from "react";
+import type { ArtistProfile } from "../../../Types/artistTypes";
 
 interface UserProfile {
   fullName: string;
@@ -6,6 +12,7 @@ interface UserProfile {
   phone: string;
   role: string;
   profilePicture: string;
+  savedArtists?: DocumentReference[];
 }
 
 export default function DashboardContent({
@@ -13,32 +20,53 @@ export default function DashboardContent({
 }: {
   userProfile: UserProfile | null;
 }) {
-  const [savedArtists, setSavedArtists] = useState([
-    {
-      id: 1,
-      name: "Taste of Awadh",
-      category: "Premium Catering",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuDJq_--kxQNzSB_OygTDO71o8WvWhLoqmVNhFE8nraNV8-0a_a8M3qp5b2vFKfMpcqD_IF4WJWzRwrj5lFyptlwU38luhM494Y479tM9wIELLv6myiPem8Wglgwa1GJ4SO8Zz16cvkhb0Nni2SgHle07Xmqu84Tcg2vnnw-3CEeqmM1HK9WrEc22zeq17UlefbyWLtE0uFItUKBVleXZVDhbRoj65MqHV67jcrbk0vwnQLBCtMn0XcuUX8DhZ-vBRcHVye3cPNfG-Z9",
-      liked: true,
-    },
-    {
-      id: 2,
-      name: "Eternal Frames",
-      category: "Photography",
-      image:
-        "https://lh3.googleusercontent.com/aida-public/AB6AXuCzE-PrCnaGy7ZfZYcAwQsyYtkTVdQwdPioE6T5yV8mfFqVfc7xArGoQmkPjXnn0c81WeQpK2Hc5rYjFyuFyJ4SjKjiedUz7xOehCwG5eOoEhAhXrBpNC3XvIhHugVUaGz5WlrxWK8OCvTavPui9te4vnSusBkJ1yLvDpuxE9BUtKJ4kyspy1tERFV5hcQVDy1qBUxRbiXejKb_UAmenwyRyYVpSqPCXD9LFoQwhivg9cOP0EbyOX6fJjiBX8pFWkfKY7fb3Q50xmmU",
-      liked: true,
-    },
-  ]);
+  const [savedArtists, setSavedArtists] = useState<ArtistProfile[]>([]);
 
-  const toggleLike = (id: any) => {
-    setSavedArtists((prev) =>
-      prev.map((item) =>
-        item.id === id ? { ...item, liked: !item.liked } : item,
-      ),
-    );
+  const fetchDocsFromRefs = async <T = DocumentData,>(
+    refs: DocumentReference<DocumentData>[],
+  ): Promise<T[]> => {
+    try {
+      const promises = refs.map((ref) => getDoc(ref));
+
+      const snapshots = await Promise.all(promises);
+
+      const data = snapshots
+        .filter((snap) => snap.exists())
+        .map((snap) => ({
+          ...snap.data(),
+        })) as T[];
+
+      return data;
+    } catch (error) {
+      console.error("Error fetching docs from refs:", error);
+      return [];
+    }
   };
+
+  useEffect(() => {
+    const getSavedArtists = async () => {
+      if (
+        !userProfile ||
+        userProfile?.savedArtists === undefined ||
+        userProfile?.savedArtists?.length === 0
+      )
+        return;
+      const artists = await fetchDocsFromRefs<ArtistProfile>(
+        userProfile?.savedArtists,
+      );
+      console.log("Saved artists : ", artists);
+      setSavedArtists(artists);
+    };
+    getSavedArtists();
+  }, [userProfile]);
+
+  // const toggleLike = (id: any) => {
+  //   setSavedArtists((prev) =>
+  //     prev.map((item) =>
+  //       item.id === id ? { ...item, liked: !item.liked } : item,
+  //     ),
+  //   );
+  // };
 
   return (
     <div className="min-h-screen bg-[#fdf8f9] px-4 py-6 md:px-8 lg:px-0">
@@ -138,31 +166,31 @@ export default function DashboardContent({
           <section>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold">Saved Artists</h3>
-              <span className="text-sm text-gray-400">12 artists</span>
+              <span className="text-sm text-gray-400">{`${savedArtists.length} artists`}</span>
             </div>
 
             <div className="space-y-4">
               {savedArtists.map((artist) => (
                 <div
-                  key={artist.id}
+                  key={artist.uid}
                   className="bg-white rounded-2xl p-4 flex items-center gap-4 shadow-sm border border-gray-100"
                 >
                   <img
-                    src={artist.image}
-                    alt={artist.name}
+                    src={artist.profilePicture}
+                    alt={artist.fullName}
                     className="w-14 h-14 rounded-xl object-cover"
                   />
 
                   <div className="flex-1">
-                    <h4 className="font-semibold">{artist.name}</h4>
-                    <p className="text-sm text-gray-500">{artist.category}</p>
+                    <h4 className="font-semibold">{artist.fullName}</h4>
+                    <p className="text-sm text-gray-500">{artist.role}</p>
                   </div>
 
                   <button
-                    onClick={() => toggleLike(artist.id)}
+                    // onClick={() => toggleLike(artist.id)}
                     className="text-xl"
                   >
-                    {artist.liked ? "❤️" : "🤍"}
+                    ❤️
                   </button>
                 </div>
               ))}

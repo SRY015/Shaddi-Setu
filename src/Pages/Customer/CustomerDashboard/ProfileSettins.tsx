@@ -16,7 +16,7 @@ interface UserProfile {
   location?: string;
   language?: string;
   role?: string;
-  profileImage?: string;
+  profilePicture?: string;
   whatsappUpdates?: boolean;
   emailAlerts?: boolean;
 }
@@ -30,7 +30,7 @@ export default function ProfileSettings({
   const [profilePic, setProfilePic] = useState<File | null>(null);
 
   const [profilePreview, setProfilePreview] = useState(
-    userProfile?.profileImage || "",
+    userProfile?.profilePicture || "",
   );
 
   const [formData, setFormData] = useState<UserProfile>({
@@ -43,7 +43,7 @@ export default function ProfileSettings({
     language: userProfile?.language || "English",
     whatsappUpdates: userProfile?.whatsappUpdates || false,
     emailAlerts: userProfile?.emailAlerts || false,
-    profileImage: userProfile?.profileImage || "",
+    profilePicture: userProfile?.profilePicture || "",
   });
 
   /**
@@ -59,7 +59,7 @@ export default function ProfileSettings({
     language: "English",
     whatsappUpdates: false,
     emailAlerts: false,
-    profileImage: "",
+    profilePicture: "",
   });
 
   useEffect(() => {
@@ -74,12 +74,12 @@ export default function ProfileSettings({
         language: userProfile.language || "English",
         whatsappUpdates: userProfile.whatsappUpdates || false,
         emailAlerts: userProfile.emailAlerts || false,
-        profileImage: userProfile.profileImage || "",
+        profilePicture: userProfile.profilePicture || "",
       };
 
       setFormData(initialData);
       setInitialFormData(initialData);
-      setProfilePreview(userProfile.profileImage || "");
+      setProfilePreview(userProfile.profilePicture || "");
       setProfilePic(null);
     }
   }, [userProfile]);
@@ -162,7 +162,7 @@ export default function ProfileSettings({
       /**
        * Only upload if new profile pic selected
        */
-      let profileImageUrl = formData.profileImage || "";
+      let profileImageUrl = formData.profilePicture || "";
 
       if (profilePic) {
         profileImageUrl = await uploadToCloudinary(profilePic);
@@ -212,7 +212,7 @@ export default function ProfileSettings({
 
   const handleDiscard = () => {
     setFormData(initialFormData);
-    setProfilePreview(initialFormData.profileImage || "");
+    setProfilePreview(initialFormData.profilePicture || "");
     setProfilePic(null);
   };
 
