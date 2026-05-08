@@ -108,6 +108,7 @@ const Profile = ({ userProfile }: { userProfile: ArtistProfile | null }) => {
     profilePicture: userProfile?.profilePicture || "",
     verified: false,
     profileCompletion: userProfile?.profileCompletion || 40,
+    role: userProfile?.role || "",
   });
 
   const [saving, setSaving] = useState(false);

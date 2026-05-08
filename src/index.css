@@ -1,1 +1,107 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
+
+:root {
+  color-scheme: light;
+  --font-family: 'Inter', 'Plus Jakarta Sans', system-ui, sans-serif;
+  --surface: #fdf7f4;
+  --surface-strong: #fcf1ef;
+  --surface-soft: #fff7f5;
+  --text-primary: #1c1b1c;
+  --text-secondary: #5a534b;
+  --brand: #b12b31;
+  --brand-dark: #8d1f28;
+  --accent: #006d2f;
+  --border: #e7ded7;
+  --shadow-soft: 0 24px 70px rgba(28, 27, 28, 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: radial-gradient(circle at top left, rgba(177, 43, 49, 0.12), transparent 25%),
+    radial-gradient(circle at bottom right, rgba(0, 109, 47, 0.08), transparent 28%),
+    var(--surface);
+  color: var(--text-primary);
+  font-family: var(--font-family);
+  line-height: 1.6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(177, 43, 49, 0.16);
+}
+
+.hero-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at top left, rgba(177, 43, 49, 0.18), transparent 35%);
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.card-surface {
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: var(--shadow-soft);
+}
+
+.soft-panel {
+  border-radius: 1.75rem;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 24px 60px rgba(28, 27, 28, 0.08);
+}
+
+.btn-brand {
+  background: var(--brand);
+  color: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 14px 35px rgba(177, 43, 49, 0.2);
+}
+
+.btn-brand:hover {
+  background: var(--brand-dark);
+}
+
+.btn-alt {
+  background: #f3ece9;
+  color: var(--text-primary);
+  border-radius: 1rem;
+}
+
+.btn-alt:hover {
+  background: #e8dfda;
+}
+
+.font-label {
+  font-family: 'Inter', sans-serif;
+}
+
+.font-headline {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}

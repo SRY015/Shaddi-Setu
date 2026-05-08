@@ -462,7 +462,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
             let profileCollection = "";
             if (role === "customer") {
               profileCollection = COLLECTIONS.customers;
-            } else if (role === "photographer" || role === "makeup artist") {
+            } else if (role === "photographer" || role === "makeupArtist") {
               profileCollection = COLLECTIONS.artists;
             }
 
@@ -522,7 +522,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   }, []);
 
   if (initialLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex min-h-[70vh] w-full items-center justify-center">
+        <div className="relative flex items-center justify-center">
+          <div className="h-16 w-16 rounded-full border-4 border-[#f0d6d8]" />
+          <div className="absolute h-16 w-16 animate-spin rounded-full border-4 border-[#b12b31] border-t-transparent" />
+        </div>
+      </div>
+    );
   }
 
   return (

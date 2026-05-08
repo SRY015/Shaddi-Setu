@@ -1,21 +1,18 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
   const { user, userProfile, logout } = useAuth();
-
-  console.log(userProfile);
 
   const navItems = [
     { path: "/", label: "Home" },
     { path: "/search-artist", label: "Search" },
     {
       path:
-        userProfile?.role === "Photographer" ||
-        userProfile?.role === "makrup artist"
+        userProfile?.role === "photographer" ||
+        userProfile?.role === "makeupArtist"
           ? "/artist-dashboard"
           : "/customer-dashboard",
       label: "Dashboard",
@@ -32,32 +29,29 @@ const Navbar = () => {
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     `transition-all duration-300 ${
       isActive
-        ? "text-[#b12b31] border-b-2 border-[#b12b31] pb-1 font-bold"
+        ? "text-[#b12b31] border-b-2 border-[#b12b31] pb-1 font-semibold"
         : "text-stone-600 hover:text-[#b12b31] font-medium"
     }`;
 
   return (
-    <nav className="fixed top-0 left-0 w-full z-1000 bg-[#fdf8f9]/80 backdrop-blur-xl shadow-[0_10px_30px_-15px_rgba(177,43,49,0.15)]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav className="fixed top-0 left-0 w-full z-50 bg-white/90 backdrop-blur-xl border-b border-white/70">
+      <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between py-4">
-          {/* Logo */}
-          <NavLink
-            to="/"
-            className="text-xl sm:text-2xl font-extrabold italic tracking-tight text-[#b12b31] whitespace-nowrap"
-          >
-            Gramin Vivah
-          </NavLink>
+          <Link to="/" className="flex items-center gap-3">
+            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#b12b31]/10 text-[#b12b31] font-bold">
+              GV
+            </div>
+            <div>
+              <div className="text-lg font-extrabold tracking-tight text-[#1c1b1c]">
+                Gramin Vivah
+              </div>
+              <div className="text-xs uppercase tracking-[0.25em] text-[#7f7663]">
+                Rural Wedding Marketplace
+              </div>
+            </div>
+          </Link>
 
-          {/* Desktop Navigation */}
-          {/* <div className="hidden md:flex items-center gap-6 lg:gap-8">
-            {navItems.map((item) => (
-              <NavLink key={item.path} to={item.path} className={navLinkClass}>
-                {item.label}
-              </NavLink>
-            ))}
-          </div> */}
-
-          <div className="hidden md:flex items-center gap-6 lg:gap-8">
+          <div className="hidden md:flex items-center gap-8">
             {navItems.map((item) => (
               <NavLink
                 onClick={() => handleLogout(item.label)}
@@ -69,9 +63,15 @@ const Navbar = () => {
               </NavLink>
             ))}
 
-            {/* Profile Image */}
+            <NavLink
+              to="/search-artist"
+              className="rounded-full bg-[#b12b31] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_14px_40px_rgba(177,43,49,0.18)] transition hover:bg-[#94202b]"
+            >
+              Book Now
+            </NavLink>
+
             {user !== null && (
-              <div className="ml-4">
+              <div>
                 <img
                   src={
                     userProfile?.profilePicture ||
@@ -84,7 +84,6 @@ const Navbar = () => {
             )}
           </div>
 
-          {/* Mobile Hamburger */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             className="md:hidden flex items-center justify-center text-[#b12b31]"
@@ -111,25 +110,24 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
       <div
         className={`md:hidden overflow-hidden transition-all duration-300 ease-in-out ${
           isMenuOpen
-            ? "max-h-125 opacity-100 border-t border-stone-200"
+            ? "max-h-96 opacity-100 border-t border-stone-200"
             : "max-h-0 opacity-0"
         }`}
       >
         <div className="bg-white/95 backdrop-blur-xl px-4 py-4 shadow-lg">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             {navItems.map((item) => (
               <NavLink
                 key={item.path}
                 to={item.path}
                 onClick={() => setIsMenuOpen(false)}
                 className={({ isActive }) =>
-                  `rounded-lg px-3 py-3 transition-all duration-300 ${
+                  `rounded-2xl px-4 py-3 transition-all duration-300 ${
                     isActive
-                      ? "bg-[#fff1f1] text-[#b12b31] font-bold"
+                      ? "bg-[#fff1f1] text-[#b12b31] font-semibold"
                       : "text-stone-700 hover:bg-stone-50 hover:text-[#b12b31] font-medium"
                   }`
                 }

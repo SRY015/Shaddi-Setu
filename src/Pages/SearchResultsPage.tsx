@@ -12,47 +12,30 @@ import {
 import { FaWhatsapp } from "react-icons/fa6";
 import { FaRegEye } from "react-icons/fa";
 import { IoLocation, IoStar, IoStarHalf, IoStarOutline } from "react-icons/io5";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db, COLLECTIONS } from "../Config/firebaseConfig";
 import { SaveArtistButton } from "../Components/SaveArtistButton";
+import { useArtist } from "../Hooks/useArtist";
 
 const SearchResultsPage = () => {
   const navigate = useNavigate();
 
+  const { loading, fetchArtists, hasNextPage, hasPreviousPage } = useArtist();
+
   const [artists, setArtists] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
 
   const handleSaveLoginRequired = () => {
     navigate("/user-login");
   };
 
+  const loadArtists = async (direction?: "next" | "prev") => {
+    const res = await fetchArtists(direction);
+
+    if (res) {
+      setArtists(res);
+    }
+  };
+
   useEffect(() => {
-    const fetchArtists = async () => {
-      try {
-        setLoading(true);
-
-        const q = query(
-          collection(db, COLLECTIONS.artists),
-          where("role", "in", ["MakeupArtist", "Photographer"]),
-          where("profileCompletion", "==", 100),
-        );
-
-        const snap = await getDocs(q);
-
-        const data = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        console.log("Artists data : ", data);
-        setArtists(data);
-      } catch (err) {
-        console.log(err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchArtists();
+    loadArtists();
   }, []);
 
   const renderStars = (count: number) => {
@@ -60,19 +43,15 @@ const SearchResultsPage = () => {
     const hasHalf = count % 1 !== 0;
 
     return (
-      <div className="flex items-center text-[#735c00]">
+      <div className="flex items-center text-[#c48b11]">
         {[...Array(fullStars)].map((_, i) => (
-          <span
-            key={i}
-            className="material-symbols-outlined text-base"
-            style={{ fontVariationSettings: "'FILL' 1" }}
-          >
+          <span key={i} className="text-base">
             <IoStar />
           </span>
         ))}
 
         {hasHalf && (
-          <span className="material-symbols-outlined text-base">
+          <span className="text-base">
             <IoStarHalf />
           </span>
         )}
@@ -80,10 +59,7 @@ const SearchResultsPage = () => {
         {!hasHalf &&
           fullStars < 5 &&
           [...Array(5 - fullStars)].map((_, i) => (
-            <span
-              key={`empty-${i}`}
-              className="material-symbols-outlined text-base"
-            >
+            <span key={`empty-${i}`} className="text-base opacity-40">
               <IoStarOutline />
             </span>
           ))}
@@ -92,46 +68,84 @@ const SearchResultsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fdf8f9] text-[#1c1b1c]">
-      {/* Header */}
+    <div className="min-h-screen bg-[#fcf8f8] text-[#1c1b1c] overflow-hidden">
+      {/* Decorative Background */}
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute top-0 left-0 h-105 w-105 rounded-full bg-[#b12b31]/10 blur-3xl" />
+        <div className="absolute bottom-0 right-0 h-95 w-95 rounded-full bg-[#006d2f]/10 blur-3xl" />
+      </div>
+
       <Navbar />
 
-      {/* Main */}
-      <main className="mx-auto max-w-7xl px-4 pb-12 pt-24 md:px-6 font-['Lexend']">
-        {/* Search Header */}
-        <div className="mb-10">
-          <h1 className="mb-2 text-3xl font-extrabold tracking-tight text-[#1c1b1c] md:text-4xl font-['Plus_Jakarta_Sans']">
-            Find Your Perfect Artist
-          </h1>
+      <main className="mx-auto  px-4 pb-16 pt-24 md:px-6 font-['Lexend']">
+        {/* Header */}
+        <div className="relative overflow-hidden rounded-4xl border border-white/60 bg-white/70 backdrop-blur-xl px-6 py-10 md:px-10 shadow-[0_25px_80px_-35px_rgba(177,43,49,0.25)] mb-10">
+          <div className="absolute top-0 right-0 h-44 w-44 rounded-full bg-[#b12b31]/10 blur-3xl" />
 
-          <p className="text-[#4d4635]">
-            128 Verified Artists found for your special day.
-          </p>
+          <div className="relative z-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#b12b31]/10 px-4 py-2 text-sm font-semibold text-[#b12b31]">
+              <MdVerifiedUser />
+              Trusted Wedding Marketplace
+            </div>
+
+            <h1 className="mt-5 text-4xl md:text-5xl font-black tracking-tight text-[#1c1b1c] font-['Plus_Jakarta_Sans'] leading-tight">
+              Find Your Perfect Artist
+            </h1>
+
+            <p className=" text-base md:text-lg text-[#5f5650] leading-relaxed">
+              Discover verified makeup artists and photographers trusted by
+              families across rural and urban India.
+            </p>
+
+            <div className="mt-6 flex flex-wrap items-center gap-4">
+              <div className="rounded-2xl bg-[#fff7f7] border border-[#f1d4d6] px-5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7f79]">
+                  Verified Artists
+                </p>
+                <p className="text-2xl font-black text-[#b12b31]">128+</p>
+              </div>
+
+              <div className="rounded-2xl bg-[#f6fff8] border border-[#cce7d5] px-5 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7f79]">
+                  Successful Bookings
+                </p>
+                <p className="text-2xl font-black text-[#006d2f]">2.4k+</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-8 lg:flex-row">
           {/* Sidebar */}
-          <aside className="w-full shrink-0 lg:w-72">
+          <aside className="w-full shrink-0 lg:w-80">
             <div className="sticky top-28 space-y-6">
-              <div
-                className="rounded-[1.25rem] bg-[#f7f2f3] p-6"
-                style={{
-                  boxShadow: "0 10px 30px -10px rgba(177, 43, 49, 0.15)",
-                }}
-              >
-                <div className="mb-6 flex items-center gap-2">
-                  <span className="material-symbols-outlined text-[#b12b31]">
-                    <MdFilterList />
-                  </span>
-                  <h2 className="text-lg font-bold font-['Plus_Jakarta_Sans']">
-                    Filters
-                  </h2>
+              {/* Filter Card */}
+              <div className="rounded-4xl border border-white/70 bg-white/80 backdrop-blur-xl p-7 shadow-[0_25px_60px_-30px_rgba(28,27,28,0.18)]">
+                <div className="mb-7 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#b12b31]/10 text-[#b12b31]">
+                      <MdFilterList className="text-2xl" />
+                    </div>
+
+                    <div>
+                      <h2 className="text-lg font-bold font-['Plus_Jakarta_Sans']">
+                        Filters
+                      </h2>
+                      <p className="text-xs text-[#7f7663]">
+                        Refine your search
+                      </p>
+                    </div>
+                  </div>
+
+                  <button className="text-xs font-bold text-[#b12b31] hover:underline cursor-pointer">
+                    Reset
+                  </button>
                 </div>
 
                 {/* Budget */}
                 <div className="mb-8">
-                  <label className="mb-3 block text-sm font-semibold">
-                    Budget Range (Primary)
+                  <label className="mb-4 block text-sm font-bold text-[#1c1b1c]">
+                    Budget Range
                   </label>
 
                   <div className="space-y-3">
@@ -139,15 +153,16 @@ const SearchResultsPage = () => {
                       (item, i) => (
                         <label
                           key={i}
-                          className="group flex cursor-pointer items-center gap-3"
+                          className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-[#efe5e6] bg-[#fcf8f8] px-4 py-3 transition-all hover:border-[#b12b31]/30 hover:bg-[#fff7f7]"
                         >
                           <input
                             type="radio"
                             name="budget"
                             defaultChecked={i === 0}
-                            className="h-5 w-5 text-[#b12b31]"
+                            className="h-5 w-5 accent-[#b12b31]"
                           />
-                          <span className="text-sm font-medium transition-colors group-hover:text-[#b12b31]">
+
+                          <span className="text-sm font-semibold text-[#4d4635] group-hover:text-[#b12b31]">
                             {item}
                           </span>
                         </label>
@@ -158,47 +173,53 @@ const SearchResultsPage = () => {
 
                 {/* Location */}
                 <div className="mb-8">
-                  <label className="mb-3 block text-sm font-semibold">
+                  <label className="mb-4 block text-sm font-bold">
                     Location
                   </label>
 
                   <div className="relative">
-                    <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#7f7663]">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7f7663]">
                       <IoLocation />
                     </span>
 
                     <input
                       type="text"
                       placeholder="Search city or village"
-                      className="w-full rounded-xl bg-white py-3 pl-10 pr-4 text-sm outline-none focus:ring-2 focus:ring-[#ff9591]"
+                      className="w-full rounded-2xl border border-[#efe5e6] bg-[#fcf8f8] py-4 pl-11 pr-4 text-sm outline-none transition-all focus:border-[#b12b31]/40 focus:bg-white focus:ring-4 focus:ring-[#b12b31]/10"
                     />
                   </div>
                 </div>
 
                 {/* Rating */}
                 <div className="mb-8">
-                  <label className="mb-3 block text-sm font-semibold">
+                  <label className="mb-4 block text-sm font-bold">
                     Minimum Rating
                   </label>
 
-                  <div className="flex gap-2">
-                    <button className="flex-1 rounded-lg bg-[#e6e1e2] py-2 text-xs font-bold">
-                      3+
-                    </button>
-
-                    <button className="flex-1 rounded-lg bg-[#b12b31] py-2 text-xs font-bold text-white shadow-md">
-                      4+
-                    </button>
-
-                    <button className="flex-1 rounded-lg bg-[#e6e1e2] py-2 text-xs font-bold">
-                      4.5+
-                    </button>
+                  <div className="grid grid-cols-3 gap-3">
+                    {["3+", "4+", "4.5+"].map((rating, index) => (
+                      <button
+                        key={index}
+                        className={`rounded-xl py-3 text-sm font-bold transition-all cursor-pointer ${
+                          rating === "4+"
+                            ? "bg-[#b12b31] text-white shadow-lg shadow-[#b12b31]/20"
+                            : "bg-[#f3ecec] text-[#4d4635] hover:bg-[#eadbdd]"
+                        }`}
+                      >
+                        {rating}
+                      </button>
+                    ))}
                   </div>
                 </div>
 
                 {/* Verified */}
-                <div className="flex items-center justify-between border-t border-[#d0c5af]/40 pt-4">
-                  <span className="text-sm font-semibold">Verified Only</span>
+                <div className="flex items-center justify-between rounded-2xl border border-[#efe5e6] bg-[#fcf8f8] px-4 py-4">
+                  <div>
+                    <p className="text-sm font-bold">Verified Only</p>
+                    <p className="text-xs text-[#7f7663]">
+                      Trusted professionals
+                    </p>
+                  </div>
 
                   <label className="relative inline-flex cursor-pointer items-center">
                     <input
@@ -206,190 +227,190 @@ const SearchResultsPage = () => {
                       defaultChecked
                       className="peer sr-only"
                     />
-                    <div className="h-6 w-11 rounded-full bg-[#e6e1e2] after:absolute after:inset-s-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#b12b31] peer-checked:after:translate-x-full" />
+
+                    <div className="h-6 w-11 rounded-full bg-[#e6e1e2] after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#b12b31] peer-checked:after:translate-x-full" />
                   </label>
                 </div>
               </div>
 
-              {/* Trust Ribbon */}
-              <div className="overflow-hidden rounded-xl bg-[#e6e1e2]/50 p-4 text-center">
-                <div className="mb-1 flex items-center justify-center gap-2">
-                  <span
-                    className="material-symbols-outlined text-[#735c00] text-base"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    <MdVerifiedUser />
-                  </span>
+              {/* Social Proof */}
+              <div className="relative overflow-hidden rounded-4xl border border-[#ead8da] bg-linear-to-br from-[#fff7f7] to-white p-6 shadow-[0_25px_60px_-35px_rgba(177,43,49,0.25)]">
+                <div className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-[#b12b31]/10" />
 
-                  <span className="text-xs font-bold uppercase tracking-widest text-[#4d4635]">
+                <div className="relative z-10">
+                  <div className="mb-3 flex items-center justify-center gap-2">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#fed65b] text-[#745c00]">
+                      <MdVerifiedUser />
+                    </div>
+                  </div>
+
+                  <h3 className="text-center text-sm font-black uppercase tracking-[0.2em] text-[#4d4635]">
                     Social Proof
-                  </span>
-                </div>
+                  </h3>
 
-                <p className="text-xs font-medium text-stone-600">
-                  Booked by 4 families in Palampur today
-                </p>
+                  <p className="mt-3 text-center text-sm leading-relaxed text-[#5f5650]">
+                    4 families booked artists from Palampur in the last 24
+                    hours.
+                  </p>
+                </div>
               </div>
             </div>
           </aside>
-          {/* Cards */}
+
+          {/* Artists */}
           {!loading ? (
             <div className="flex-1 space-y-8">
               {artists.length !== 0 ? (
-                artists &&
-                artists.map((artist, index) => (
-                  <article
-                    key={index}
-                    className="group flex flex-col overflow-hidden rounded-[1.25rem] bg-white transition-transform hover:-translate-y-1 md:flex-row"
-                    style={{
-                      boxShadow: "0 10px 30px -10px rgba(177, 43, 49, 0.15)",
-                    }}
-                  >
-                    {/* Image */}
-                    <div className="relative h-64 w-full overflow-hidden md:h-auto md:w-80">
-                      <img
-                        src={artist.profileImage}
-                        alt={artist.fullName}
-                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
-                      />
+                <>
+                  {artists.map((artist, index) => (
+                    <article
+                      key={index}
+                      className="group relative overflow-hidden rounded-4xl border border-white/60 bg-white/85 backdrop-blur-xl shadow-[0_30px_80px_-35px_rgba(28,27,28,0.18)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_40px_100px_-35px_rgba(177,43,49,0.25)]"
+                    >
+                      <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-[#b12b31]/5 blur-3xl" />
 
-                      <div className="absolute left-4 top-4 flex items-center gap-1.5 rounded-lg bg-[#fed65b] px-3 py-1.5 text-xs font-bold text-[#745c00] shadow-sm">
-                        <span
-                          className="material-symbols-outlined text-sm"
-                          style={{ fontVariationSettings: "'FILL' 1" }}
-                        >
-                          <MdOutlineVerified />
-                        </span>
-                        Verified
-                      </div>
-                    </div>
+                      <div className="relative z-10 flex flex-col md:flex-row">
+                        {/* Image */}
+                        <div className="relative h-72 w-full overflow-hidden md:h-76 md:w-80 lg:w-96">
+                          <img
+                            src={artist.profilePicture}
+                            alt={artist.fullName}
+                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                          />
 
-                    {/* Content */}
-                    <div className="flex flex-1 flex-col p-6 md:p-8">
-                      <div className="mb-4 flex flex-col justify-between gap-2 md:flex-row">
-                        <div className="">
-                          <h3 className="mb-1 text-2xl font-extrabold leading-tight font-['Plus_Jakarta_Sans']">
-                            {artist.fullName}
-                          </h3>
+                          <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent" />
 
-                          <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-1">
-                              {renderStars(3.5)}
-                              <span className="ml-1 text-sm font-bold">
-                                {3.5}
-                              </span>
-                            </div>
-
-                            <span className="text-[#d0c5af]">|</span>
-
-                            <div className="flex items-center gap-1 text-sm font-medium text-[#4d4635]">
-                              <span className="material-symbols-outlined text-sm">
-                                <IoLocation />
-                              </span>
-                              {artist.location}
-                            </div>
+                          <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-[#fed65b] px-4 py-2 text-xs font-black text-[#745c00] shadow-lg">
+                            <MdOutlineVerified />
+                            Verified Artist
                           </div>
                         </div>
 
-                        <div className="text-right min-w-36">
-                          <span className="mb-1 block text-xs font-bold uppercase tracking-wider text-[#4d4635]">
-                            Starting from
-                          </span>
-                          <div className="flex items-center space-x-1 justify-end">
-                            <MdCurrencyRupee className="text-[#b12b31]" />
-                            <span className="text-2xl font-extrabold text-[#b12b31] font-['Plus_Jakarta_Sans']">
-                              {artist?.startingPrice}
-                            </span>
+                        {/* Content */}
+                        <div className="flex flex-1 flex-col p-6 md:p-8">
+                          <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                            <div>
+                              <h3 className="text-2xl md:text-3xl font-black text-[#1c1b1c] font-['Plus_Jakarta_Sans']">
+                                {artist.fullName}
+                              </h3>
+
+                              <div className="mt-3 flex flex-wrap items-center gap-3">
+                                <div className="flex items-center gap-2 rounded-full bg-[#fff8e6] px-3 py-1.5">
+                                  {renderStars(3.5)}
+
+                                  <span className="text-sm font-bold text-[#745c00]">
+                                    3.5
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-2 rounded-full bg-[#f5f3f3] px-3 py-1.5 text-sm font-semibold text-[#4d4635]">
+                                  <IoLocation />
+                                  <span className="truncate max-w-45">
+                                    {artist.location}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="rounded-2xl bg-[#fff7f7] border border-[#f1d4d6] px-5 py-4 text-right">
+                              <span className="block text-xs font-bold uppercase tracking-widest text-[#8a7f79]">
+                                Starting From
+                              </span>
+
+                              <div className="mt-1 flex items-center justify-end">
+                                <MdCurrencyRupee className="text-[#b12b31]" />
+
+                                <span className="text-3xl font-black text-[#b12b31] font-['Plus_Jakarta_Sans']">
+                                  {artist?.startingPrice}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <p className="mb-8 text-sm md:text-[15px] leading-7 text-[#5f5650]">
+                            {artist?.bio}
+                          </p>
+
+                          {/* Buttons */}
+                          <div className="mt-auto flex flex-wrap gap-3">
+                            <button className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#b12b31] px-5 font-bold text-white shadow-lg shadow-[#b12b31]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] cursor-pointer">
+                              <MdCall className="text-xl" />
+                              Call Now
+                            </button>
+
+                            <button className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#006d2f] px-5 font-bold text-white shadow-lg shadow-[#006d2f]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] cursor-pointer">
+                              <FaWhatsapp className="text-lg" />
+                              WhatsApp
+                            </button>
+
+                            <SaveArtistButton
+                              artistId={artist.uid}
+                              variant="with-label"
+                              onLoginRequired={handleSaveLoginRequired}
+                              className="flex-1 md:flex-none cursor-pointer"
+                            />
+
+                            <button
+                              onClick={() =>
+                                navigate(`/artist-profile/${artist.uid}`)
+                              }
+                              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl border border-[#eadbdd] bg-[#fcf8f8] px-5 font-bold text-[#4d4635] transition-all hover:border-[#b12b31]/20 hover:bg-[#fff7f7] hover:text-[#b12b31] active:scale-[0.98] cursor-pointer"
+                            >
+                              <FaRegEye />
+                              View Profile
+                            </button>
                           </div>
                         </div>
                       </div>
+                    </article>
+                  ))}
 
-                      <p className="mb-8 ml-2 text-sm leading-relaxed text-[#4d4635]">
-                        {artist?.bio}
-                      </p>
+                  {/* Pagination */}
+                  <div className="flex items-center justify-center gap-4 pt-4">
+                    <button
+                      disabled={!hasPreviousPage}
+                      onClick={() => loadArtists("prev")}
+                      className="rounded-2xl border border-[#eadbdd] bg-white px-7 py-3 font-bold text-[#4d4635] shadow-sm transition-all hover:border-[#b12b31]/30 hover:bg-[#fff7f7] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                    >
+                      ← Previous
+                    </button>
 
-                      {/* Buttons */}
-                      <div className="mt-auto flex flex-wrap gap-3">
-                        <button className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#b12b31] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
-                          <span className="material-symbols-outlined">
-                            <MdCall />
-                          </span>
-                          Call Now
-                        </button>
-
-                        <button className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#006d2f] font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer">
-                          <span className="material-symbols-outlined">
-                            <FaWhatsapp />
-                          </span>
-                          WhatsApp
-                        </button>
-
-                        <SaveArtistButton
-                          artistId={artist.uid}
-                          variant="with-label"
-                          onLoginRequired={handleSaveLoginRequired}
-                          className="flex-1 md:flex-none cursor-pointer"
-                        />
-
-                        <button
-                          onClick={() =>
-                            navigate(`/artist-profile/${artist.uid}`)
-                          }
-                          className="flex h-14 flex-1 items-center justify-center gap-2 rounded-xl bg-[#ece7e8] hover:bg-[#e6e1e2] font-bold shadow-lg transition-all hover:opacity-90 active:scale-95 font-['Plus_Jakarta_Sans'] cursor-pointer"
-                        >
-                          <span className="material-symbols-outlined">
-                            <FaRegEye />
-                          </span>
-                          View
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))
+                    <button
+                      disabled={!hasNextPage}
+                      onClick={() => loadArtists("next")}
+                      className="rounded-2xl bg-[#b12b31] px-7 py-3 font-bold text-white shadow-lg shadow-[#b12b31]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
+                    >
+                      Next →
+                    </button>
+                  </div>
+                </>
               ) : (
-                <div className="flex items-center justify-center h-1/3 w-full bg-transparent">
-                  No artist found
+                <div className="flex flex-col items-center justify-center rounded-4xl border border-dashed border-[#e7d8d9] bg-white/70 py-28 text-center">
+                  <div className="mb-5 text-6xl">🎨</div>
+
+                  <h2 className="text-3xl font-black text-[#1c1b1c] font-['Plus_Jakarta_Sans']">
+                    No Artists Found
+                  </h2>
+
+                  <p className="mt-3 max-w-md text-[#6b625d]">
+                    Try adjusting your filters or explore artists from nearby
+                    locations.
+                  </p>
                 </div>
               )}
             </div>
           ) : (
-            <div className="flex items-center justify-center h-screen w-full bg-transparent">
-              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="flex min-h-[70vh] w-full items-center justify-center">
+              <div className="relative flex items-center justify-center">
+                <div className="h-16 w-16 rounded-full border-4 border-[#f0d6d8]" />
+                <div className="absolute h-16 w-16 animate-spin rounded-full border-4 border-[#b12b31] border-t-transparent" />
+              </div>
             </div>
           )}
         </div>
       </main>
 
-      {/* Footer */}
       <Footer />
-
-      {/* Mobile Bottom Nav */}
-      {/* <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-between border-t border-stone-100 bg-white/90 px-6 py-3 backdrop-blur-md md:hidden">
-        {[
-          ["search", "Search", true],
-          ["favorite", "Saved"],
-          ["calendar_month", "Bookings"],
-          ["person", "Profile"],
-        ].map(([icon, label, active], i) => (
-          <button
-            key={i}
-            className={`flex flex-col items-center gap-1 ${
-              active ? "text-[#b12b31]" : "text-stone-400"
-            }`}
-          >
-            <span
-              className="material-symbols-outlined"
-              style={{
-                fontVariationSettings: active ? "'FILL' 1" : "",
-              }}
-            >
-              {icon}
-            </span>
-
-            <span className="text-[10px] font-bold">{label}</span>
-          </button>
-        ))}
-      </nav> */}
     </div>
   );
 };

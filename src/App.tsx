@@ -68,7 +68,7 @@ const appRouter = createBrowserRouter([
       {
         path: "artist-dashboard",
         element: (
-          <RoleProtectedRoute allowedRoles={["Photographer", "Makeup Artist"]}>
+          <RoleProtectedRoute allowedRoles={["photographer", "makeupArtist"]}>
             <ArtistDashboard />
           </RoleProtectedRoute>
         ),

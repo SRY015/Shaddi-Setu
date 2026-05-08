@@ -1,9 +1,7 @@
-.active{
-    color: #b12b31;
-    border-bottom-style: var(--tw-border-style);
-    border-bottom-width: 2px;
-    border-color: #b12b31;
-    font-weight: bold;
+.active {
+  color: var(--brand);
+  border-bottom: 2px solid var(--brand);
+  font-weight: 700;
 }
 
 /* Hide scrollbar but keep scroll functionality */
@@ -12,6 +10,20 @@
 }
 
 .no-scrollbar {
-  -ms-overflow-style: none;  /* IE & Edge */
-  scrollbar-width: none;     /* Firefox */
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.section-card {
+  border-radius: 2rem;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 30px 80px rgba(28, 27, 28, 0.08);
+}
+
+.section-title {
+  color: var(--text-primary);
+}
+
+.subtle-border {
+  border: 1px solid rgba(161, 150, 141, 0.22);
 }

@@ -343,7 +343,7 @@ interface FormData {
   phone: string;
   email: string;
   password: string;
-  serviceCategory: "Makeup Artist" | "photographer";
+  serviceCategory: "makeupArtist" | "photographer";
   profileImage: File | null;
 }
 
@@ -357,7 +357,7 @@ const ArtistRegistration = () => {
     phone: "",
     email: "",
     password: "",
-    serviceCategory: "Makeup Artist",
+    serviceCategory: "makeupArtist",
     profileImage: null,
   });
   const [imagePreview, setImagePreview] = useState<string>("");
@@ -382,7 +382,7 @@ const ArtistRegistration = () => {
     }));
   };
 
-  const handleServiceChange = (value: "Makeup Artist" | "photographer") => {
+  const handleServiceChange = (value: "makeupArtist" | "photographer") => {
     setFormData((prev) => ({
       ...prev,
       serviceCategory: value,
@@ -691,9 +691,9 @@ const ArtistRegistration = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <button
                     type="button"
-                    onClick={() => handleServiceChange("Makeup Artist")}
+                    onClick={() => handleServiceChange("makeupArtist")}
                     className={`p-4 rounded-2xl border-2 font-bold transition-all ${
-                      formData.serviceCategory === "Makeup Artist"
+                      formData.serviceCategory === "makeupArtist"
                         ? "border-[#b12b31] bg-[#fef2f2]"
                         : "border-[#e5e1da] bg-white"
                     }`}
