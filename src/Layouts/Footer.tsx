@@ -1,3 +1,5 @@
+import { FaBook, FaCamera } from "react-icons/fa";
+import { IoBagCheck } from "react-icons/io5";
 function Footer() {
   return (
     <footer className="relative overflow-hidden border-t border-[#efe4df] bg-[#fff8f8]">
@@ -138,11 +140,13 @@ function Footer() {
                   key={i}
                   className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[#eadad3] bg-white text-[#5a534b] shadow-sm transition-all hover:-translate-y-1 hover:border-[#b12b31] hover:text-[#b12b31] cursor-pointer"
                 >
-                  {item === "Instagram"
-                    ? "📸"
-                    : item === "Facebook"
-                      ? "📘"
-                      : "💼"}
+                  {item === "Instagram" ? (
+                    <FaCamera />
+                  ) : item === "Facebook" ? (
+                    <FaBook />
+                  ) : (
+                    <IoBagCheck />
+                  )}
                 </button>
               ))}
             </div>

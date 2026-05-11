@@ -182,12 +182,12 @@ const Login: React.FC = () => {
 
                 {/* Forgot Password */}
                 <div className="text-right">
-                  <a
-                    href="#"
+                  <Link
+                    to={"/forgot-password"}
                     className="text-sm font-medium text-[#b12b31] hover:underline"
                   >
                     Forgot Password?
-                  </a>
+                  </Link>
                 </div>
               </div>
 

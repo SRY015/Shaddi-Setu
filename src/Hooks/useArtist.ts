@@ -96,128 +96,44 @@
 // };
 
 import { useCallback, useState } from "react";
-import {
-  collection,
-  getDocs,
-  limit,
-  orderBy,
-  query,
-  startAfter,
-  where,
-  type DocumentData,
-  type QueryDocumentSnapshot,
-} from "firebase/firestore";
+import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 
 import { COLLECTIONS, db } from "../Config/firebaseConfig";
 
-const PAGE_SIZE = 2;
-
 export const useArtist = () => {
   const [loading, setLoading] = useState(false);
+  const [totalNumberOfArtists, setTotalNumberOfArtists] = useState<number>(0);
 
-  // current page last doc
-  const [lastDoc, setLastDoc] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+  const fetchArtists = useCallback(async () => {
+    try {
+      setLoading(true);
 
-  // history for previous pages
-  const [pageHistory, setPageHistory] = useState<
-    QueryDocumentSnapshot<DocumentData>[]
-  >([]);
+      const q = query(
+        collection(db, COLLECTIONS.artists),
+        where("role", "in", ["makeupArtist", "photographer"]),
+        where("profileCompletion", "==", 100),
+        orderBy("createdAt", "desc"),
+      );
 
-  // check next page exists
-  const [hasNextPage, setHasNextPage] = useState(true);
+      const snap = await getDocs(q);
 
-  const fetchArtists = useCallback(
-    async (direction?: "next" | "prev") => {
-      try {
-        setLoading(true);
-
-        let q;
-
-        // BASE QUERY
-        const baseQuery = [
-          where("role", "in", ["makeupArtist", "photographer"]),
-          where("profileCompletion", "==", 100),
-          orderBy("createdAt", "desc"),
-        ];
-
-        // FIRST PAGE
-        if (!direction) {
-          q = query(
-            collection(db, COLLECTIONS.artists),
-            ...baseQuery,
-            limit(PAGE_SIZE),
-          );
-        }
-
-        // NEXT PAGE
-        else if (direction === "next" && lastDoc) {
-          setPageHistory((prev) => [...prev, lastDoc]);
-
-          q = query(
-            collection(db, COLLECTIONS.artists),
-            ...baseQuery,
-            startAfter(lastDoc),
-            limit(PAGE_SIZE),
-          );
-        }
-
-        // PREVIOUS PAGE
-        else if (direction === "prev") {
-          const history = [...pageHistory];
-
-          history.pop();
-
-          const prevDoc = history[history.length - 1];
-
-          setPageHistory(history);
-
-          if (prevDoc) {
-            q = query(
-              collection(db, COLLECTIONS.artists),
-              ...baseQuery,
-              startAfter(prevDoc),
-              limit(PAGE_SIZE),
-            );
-          } else {
-            q = query(
-              collection(db, COLLECTIONS.artists),
-              ...baseQuery,
-              limit(PAGE_SIZE),
-            );
-          }
-        }
-
-        const snap = await getDocs(q!);
-
-        const data = snap.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-
-        // SAVE LAST DOC
-        const lastVisible = snap.docs[snap.docs.length - 1];
-
-        setLastDoc(lastVisible || null);
-
-        // CHECK NEXT PAGE
-        setHasNextPage(snap.docs.length === PAGE_SIZE);
-
-        return data;
-      } catch (err) {
-        console.log(err);
-        return [];
-      } finally {
-        setLoading(false);
-      }
-    },
-    [lastDoc, pageHistory],
-  );
+      const data = snap.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setTotalNumberOfArtists(data.length);
+      return data;
+    } catch (err) {
+      console.log(err);
+      return [];
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   return {
     loading,
     fetchArtists,
-    hasNextPage,
-    hasPreviousPage: pageHistory.length > 0,
+    totalNumberOfArtists,
   };
 };

@@ -11,6 +11,7 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 
 import type { ConfirmationResult, User, UserCredential } from "firebase/auth";
@@ -97,6 +98,14 @@ interface AuthContextType {
     message: string;
     user?: User;
   }>;
+
+  // resetPassword --->
+  resetPassword: (
+    email: string,
+  ) => Promise<
+    | { success: boolean; message?: undefined }
+    | { success: boolean; message: any }
+  >;
 
   /**
    * -----------------------------
@@ -386,63 +395,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   console.log({ user });
 
-  // const fetchUserProfile = async (uid: string) => {
-  //   console.log("fetchUserProfile called");
-  //   try {
-  //     const userRef = doc(db, COLLECTIONS.users, uid);
-  //     const userSnap = await getDoc(userRef);
-
-  //     if (userSnap.exists()) {
-  //       setUserProfile(userSnap.data() as UserProfile);
-  //     }
-  //   } catch (error) {
-  //     console.log("Error fetching user profile:", error);
-  //   }
-  // };
-
-  // const listenUserProfile = (uid: string) => {
-  //   console.log("Listening to user profile...");
-
-  //   const userRef = doc(db, COLLECTIONS.users, uid);
-
-  //   const unsubscribe = onSnapshot(
-  //     userRef,
-  //     (snapshot) => {
-  //       if (snapshot.exists()) {
-  //         setUserProfile(snapshot.data() as UserProfile);
-  //       } else {
-  //         console.warn("User profile not found");
-  //         setUserProfile(null);
-  //       }
-  //     },
-  //     (error) => {
-  //       console.error("Error in user profile listener:", error);
-  //     },
-  //   );
-
-  //   return unsubscribe; // VERY IMPORTANT
-  // };
-
-  // useEffect(() => {
-  //   const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-  //     try {
-  //       if (currentUser) {
-  //         setUser(currentUser);
-  //         await fetchUserProfile(currentUser.uid);
-  //       } else {
-  //         setUser(null);
-  //         setUserProfile(null);
-  //       }
-  //     } catch (error) {
-  //       console.log(error);
-  //     } finally {
-  //       setInitialLoading(false);
-  //     }
-  //   });
-
-  //   return () => unsubscribe();
-  // }, []);
-
   useEffect(() => {
     let unsubscribeProfile: (() => void) | null = null;
 
@@ -521,6 +473,19 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     };
   }, []);
 
+  const resetPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email, {
+        url: "http://localhost:5173/user-login",
+        handleCodeInApp: true,
+      });
+
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, message: error.message };
+    }
+  };
+
   if (initialLoading) {
     return (
       <div className="flex min-h-[70vh] w-full items-center justify-center">
@@ -553,6 +518,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Email/Password Auth
         registerWithEmail,
         loginWithEmail,
+        resetPassword,
 
         // Common
         logout,

@@ -11,6 +11,8 @@ import CustomerDashboard from "./Pages/Customer/CustomerDashboard/index";
 import ArtistRegistration from "./Pages/Auth/Artist/ArtistRegistration";
 import ArtistDashboard from "./Pages/Artist/ArtistDashboard";
 import RoleProtectedRoute from "./Components/RoleProtectedRoute";
+import ErrorPage from "./Pages/ErrorPage";
+import ForgotPassword from "./Pages/Auth/ForgotPassword";
 
 function App() {
   return (
@@ -36,6 +38,10 @@ const appRouter = createBrowserRouter([
       {
         path: "user-login",
         element: <Login />,
+      },
+      {
+        path: "/forgot-password",
+        element: <ForgotPassword />,
       },
       {
         path: "user-registration",
@@ -72,6 +78,10 @@ const appRouter = createBrowserRouter([
             <ArtistDashboard />
           </RoleProtectedRoute>
         ),
+      },
+      {
+        path: "*",
+        element: <ErrorPage />,
       },
     ],
   },

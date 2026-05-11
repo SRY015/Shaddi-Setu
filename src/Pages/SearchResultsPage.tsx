@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Footer from "../Layouts/Footer";
 import Navbar from "../Layouts/Navbar";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   MdCall,
   MdFilterList,
@@ -14,20 +14,50 @@ import { FaRegEye } from "react-icons/fa";
 import { IoLocation, IoStar, IoStarHalf, IoStarOutline } from "react-icons/io5";
 import { SaveArtistButton } from "../Components/SaveArtistButton";
 import { useArtist } from "../Hooks/useArtist";
+import LocationPicker from "../Components/LocationPicker";
+import calculateDistance from "../Utils/calculateDistance";
+import { IoColorPaletteSharp } from "react-icons/io5";
 
 const SearchResultsPage = () => {
   const navigate = useNavigate();
 
-  const { loading, fetchArtists, hasNextPage, hasPreviousPage } = useArtist();
+  const { loading, fetchArtists, totalNumberOfArtists } = useArtist();
+
+  const [searchParams] = useSearchParams();
+  const queryLocation = searchParams.get("location") || "";
+  const queryArtistType = searchParams.get("artistType") || "";
 
   const [artists, setArtists] = useState<any[]>([]);
+  const [budgetRange, setBudgetRange] = useState<number>(15000);
+
+  const [minimumRating, setMinimumRating] = useState<number>(4);
+  const [artistType, setArtistType] = useState<string>(queryArtistType);
+  const [initialLocation, setInitialLocation] = useState<string>(queryLocation);
+
+  // const [verifiedOnly, setVerifiedOnly] = useState<boolean>(true);
+
+  // LBS ---> step1
+  const [locationFilterData, setLocationFilterData] = useState({
+    latitude: null as number | null,
+    longitude: null as number | null,
+    location: "",
+  });
+
+  useEffect(() => {
+    setArtistType(queryArtistType);
+    setInitialLocation(queryLocation);
+  }, [queryArtistType, queryLocation]);
+
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
 
   const handleSaveLoginRequired = () => {
     navigate("/user-login");
   };
 
-  const loadArtists = async (direction?: "next" | "prev") => {
-    const res = await fetchArtists(direction);
+  const loadArtists = async () => {
+    const res = await fetchArtists();
 
     if (res) {
       setArtists(res);
@@ -67,6 +97,70 @@ const SearchResultsPage = () => {
     );
   };
 
+  const filteredArtists = artists.filter((artist) => {
+    // Budget filter ---------->
+    const matchesBudget = Number(artist.startingPrice || 0) <= budgetRange;
+
+    // Rating filter ---------------->
+    const artistRating = Number(artist.rating || 4.5);
+    const matchesRating = artistRating >= minimumRating;
+
+    // Location filter ------------------->
+    let matchesLocation = true;
+
+    if (
+      locationFilterData.location.trim() &&
+      locationFilterData.latitude != null &&
+      locationFilterData.longitude != null &&
+      artist.latitude &&
+      artist.longitude
+    ) {
+      const distance = calculateDistance(
+        locationFilterData.latitude,
+        locationFilterData.longitude,
+        artist.latitude,
+        artist.longitude,
+      );
+      console.log({ distance });
+
+      const serviceRange = Number(artist.travelDistance || 10);
+
+      matchesLocation = distance <= serviceRange;
+    }
+
+    const matchesType = artistType ? artist.role === artistType : true;
+
+    // Final result -------------->
+    return matchesBudget && matchesLocation && matchesRating && matchesType;
+  });
+
+  console.log({ filteredArtists });
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredArtists.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedArtists = filteredArtists.slice(
+    startIndex,
+    startIndex + itemsPerPage,
+  );
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [budgetRange, minimumRating, locationFilterData]);
+
   return (
     <div className="min-h-screen bg-[#fcf8f8] text-[#1c1b1c] overflow-hidden">
       {/* Decorative Background */}
@@ -102,7 +196,7 @@ const SearchResultsPage = () => {
                 <p className="text-xs font-semibold uppercase tracking-wider text-[#8a7f79]">
                   Verified Artists
                 </p>
-                <p className="text-2xl font-black text-[#b12b31]">128+</p>
+                <p className="text-2xl font-black text-[#b12b31]">{`${totalNumberOfArtists} +`}</p>
               </div>
 
               <div className="rounded-2xl bg-[#f6fff8] border border-[#cce7d5] px-5 py-3">
@@ -137,37 +231,57 @@ const SearchResultsPage = () => {
                     </div>
                   </div>
 
-                  <button className="text-xs font-bold text-[#b12b31] hover:underline cursor-pointer">
+                  <button
+                    onClick={() => {
+                      setBudgetRange(15000);
+                      // setLocationFilter("");
+                      setLocationFilterData({
+                        latitude: null,
+                        longitude: null,
+                        location: "",
+                      });
+                      setMinimumRating(4);
+                      // setVerifiedOnly(true);
+                    }}
+                    className="text-xs font-bold text-[#b12b31] hover:underline cursor-pointer"
+                  >
                     Reset
                   </button>
                 </div>
 
                 {/* Budget */}
                 <div className="mb-8">
-                  <label className="mb-4 block text-sm font-bold text-[#1c1b1c]">
-                    Budget Range
-                  </label>
+                  <div className="mb-8">
+                    <label className="mb-4 block text-sm font-bold text-[#1c1b1c]">
+                      Budget Range
+                    </label>
 
-                  <div className="space-y-3">
-                    {["Under ₹5,000", "₹5,000 - ₹15,000", "₹15,000+"].map(
-                      (item, i) => (
-                        <label
-                          key={i}
-                          className="group flex cursor-pointer items-center gap-3 rounded-2xl border border-[#efe5e6] bg-[#fcf8f8] px-4 py-3 transition-all hover:border-[#b12b31]/30 hover:bg-[#fff7f7]"
-                        >
-                          <input
-                            type="radio"
-                            name="budget"
-                            defaultChecked={i === 0}
-                            className="h-5 w-5 accent-[#b12b31]"
-                          />
+                    <div className="rounded-2xl border border-[#efe5e6] bg-[#fcf8f8] p-5">
+                      <div className="mb-4 flex items-center justify-between">
+                        <span className="text-sm font-semibold text-[#7f7663]">
+                          Max Budget
+                        </span>
 
-                          <span className="text-sm font-semibold text-[#4d4635] group-hover:text-[#b12b31]">
-                            {item}
-                          </span>
-                        </label>
-                      ),
-                    )}
+                        <span className="text-xl font-black text-[#b12b31]">
+                          ₹{budgetRange.toLocaleString()}
+                        </span>
+                      </div>
+
+                      <input
+                        type="range"
+                        min={500}
+                        max={100000}
+                        step={50}
+                        value={budgetRange}
+                        onChange={(e) => setBudgetRange(Number(e.target.value))}
+                        className="w-full accent-[#b12b31] cursor-pointer"
+                      />
+
+                      <div className="mt-3 flex justify-between text-xs text-[#8a7f79]">
+                        <span>₹500</span>
+                        <span>₹100k</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -181,11 +295,12 @@ const SearchResultsPage = () => {
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7f7663]">
                       <IoLocation />
                     </span>
-
-                    <input
-                      type="text"
-                      placeholder="Search city or village"
-                      className="w-full rounded-2xl border border-[#efe5e6] bg-[#fcf8f8] py-4 pl-11 pr-4 text-sm outline-none transition-all focus:border-[#b12b31]/40 focus:bg-white focus:ring-4 focus:ring-[#b12b31]/10"
+                    <LocationPicker
+                      label=""
+                      initialLocation={initialLocation}
+                      mode="input"
+                      setFormData={setLocationFilterData}
+                      disableDefaultLocation={true}
                     />
                   </div>
                 </div>
@@ -197,16 +312,17 @@ const SearchResultsPage = () => {
                   </label>
 
                   <div className="grid grid-cols-3 gap-3">
-                    {["3+", "4+", "4.5+"].map((rating, index) => (
+                    {[3, 4, 4.5].map((rating, index) => (
                       <button
                         key={index}
+                        onClick={() => setMinimumRating(rating)}
                         className={`rounded-xl py-3 text-sm font-bold transition-all cursor-pointer ${
-                          rating === "4+"
+                          minimumRating === rating
                             ? "bg-[#b12b31] text-white shadow-lg shadow-[#b12b31]/20"
                             : "bg-[#f3ecec] text-[#4d4635] hover:bg-[#eadbdd]"
                         }`}
                       >
-                        {rating}
+                        {rating}+
                       </button>
                     ))}
                   </div>
@@ -224,7 +340,8 @@ const SearchResultsPage = () => {
                   <label className="relative inline-flex cursor-pointer items-center">
                     <input
                       type="checkbox"
-                      defaultChecked
+                      // checked={verifiedOnly}
+                      // onChange={(e) => setVerifiedOnly(e.target.checked)}
                       className="peer sr-only"
                     />
 
@@ -260,124 +377,161 @@ const SearchResultsPage = () => {
           {/* Artists */}
           {!loading ? (
             <div className="flex-1 space-y-8">
-              {artists.length !== 0 ? (
+              {filteredArtists.length !== 0 ? ( // artists.length !== 0 ?
                 <>
-                  {artists.map((artist, index) => (
-                    <article
-                      key={index}
-                      className="group relative overflow-hidden rounded-4xl border border-white/60 bg-white/85 backdrop-blur-xl shadow-[0_30px_80px_-35px_rgba(28,27,28,0.18)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_40px_100px_-35px_rgba(177,43,49,0.25)]"
-                    >
-                      <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-[#b12b31]/5 blur-3xl" />
+                  {paginatedArtists.map(
+                    (
+                      artist,
+                      index, // artists.map((artist, index) => (
+                    ) => (
+                      <article
+                        key={index}
+                        className="group relative overflow-hidden rounded-4xl border border-white/60 bg-white/85 backdrop-blur-xl shadow-[0_30px_80px_-35px_rgba(28,27,28,0.18)] transition-all duration-500 hover:-translate-y-1 hover:shadow-[0_40px_100px_-35px_rgba(177,43,49,0.25)]"
+                      >
+                        <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-[#b12b31]/5 blur-3xl" />
 
-                      <div className="relative z-10 flex flex-col md:flex-row">
-                        {/* Image */}
-                        <div className="relative h-72 w-full overflow-hidden md:h-76 md:w-80 lg:w-96">
-                          <img
-                            src={artist.profilePicture}
-                            alt={artist.fullName}
-                            className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                          />
-
-                          <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent" />
-
-                          <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-[#fed65b] px-4 py-2 text-xs font-black text-[#745c00] shadow-lg">
-                            <MdOutlineVerified />
-                            Verified Artist
-                          </div>
-                        </div>
-
-                        {/* Content */}
-                        <div className="flex flex-1 flex-col p-6 md:p-8">
-                          <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                            <div>
-                              <h3 className="text-2xl md:text-3xl font-black text-[#1c1b1c] font-['Plus_Jakarta_Sans']">
-                                {artist.fullName}
-                              </h3>
-
-                              <div className="mt-3 flex flex-wrap items-center gap-3">
-                                <div className="flex items-center gap-2 rounded-full bg-[#fff8e6] px-3 py-1.5">
-                                  {renderStars(3.5)}
-
-                                  <span className="text-sm font-bold text-[#745c00]">
-                                    3.5
-                                  </span>
-                                </div>
-
-                                <div className="flex items-center gap-2 rounded-full bg-[#f5f3f3] px-3 py-1.5 text-sm font-semibold text-[#4d4635]">
-                                  <IoLocation />
-                                  <span className="truncate max-w-45">
-                                    {artist.location}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            <div className="rounded-2xl bg-[#fff7f7] border border-[#f1d4d6] px-5 py-4 text-right">
-                              <span className="block text-xs font-bold uppercase tracking-widest text-[#8a7f79]">
-                                Starting From
-                              </span>
-
-                              <div className="mt-1 flex items-center justify-end">
-                                <MdCurrencyRupee className="text-[#b12b31]" />
-
-                                <span className="text-3xl font-black text-[#b12b31] font-['Plus_Jakarta_Sans']">
-                                  {artist?.startingPrice}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-
-                          <p className="mb-8 text-sm md:text-[15px] leading-7 text-[#5f5650]">
-                            {artist?.bio}
-                          </p>
-
-                          {/* Buttons */}
-                          <div className="mt-auto flex flex-wrap gap-3">
-                            <button className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#b12b31] px-5 font-bold text-white shadow-lg shadow-[#b12b31]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] cursor-pointer">
-                              <MdCall className="text-xl" />
-                              Call Now
-                            </button>
-
-                            <button className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#006d2f] px-5 font-bold text-white shadow-lg shadow-[#006d2f]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] cursor-pointer">
-                              <FaWhatsapp className="text-lg" />
-                              WhatsApp
-                            </button>
-
-                            <SaveArtistButton
-                              artistId={artist.uid}
-                              variant="with-label"
-                              onLoginRequired={handleSaveLoginRequired}
-                              className="flex-1 md:flex-none cursor-pointer"
+                        <div className="relative z-10 flex flex-col md:flex-row">
+                          {/* Image */}
+                          <div className="relative h-72 w-full overflow-hidden md:h-76 md:w-80 lg:w-96">
+                            <img
+                              src={artist.profilePicture}
+                              alt={artist.fullName}
+                              className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                             />
 
-                            <button
-                              onClick={() =>
-                                navigate(`/artist-profile/${artist.uid}`)
-                              }
-                              className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl border border-[#eadbdd] bg-[#fcf8f8] px-5 font-bold text-[#4d4635] transition-all hover:border-[#b12b31]/20 hover:bg-[#fff7f7] hover:text-[#b12b31] active:scale-[0.98] cursor-pointer"
-                            >
-                              <FaRegEye />
-                              View Profile
-                            </button>
+                            <div className="absolute inset-0 bg-linear-to-t from-black/30 via-transparent to-transparent" />
+
+                            <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full bg-[#fed65b] px-4 py-2 text-xs font-black text-[#745c00] shadow-lg">
+                              <MdOutlineVerified />
+                              {`Verified ${artist.role == "photographer" ? "Photographer" : "Makeup Artist"}`}
+                            </div>
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex flex-1 flex-col p-6 md:p-8">
+                            <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                              <div>
+                                <h3 className="text-2xl md:text-3xl font-black text-[#1c1b1c] font-['Plus_Jakarta_Sans']">
+                                  {artist.fullName}
+                                </h3>
+
+                                <div className="mt-3 flex flex-wrap items-center gap-3">
+                                  <div className="flex items-center gap-2 rounded-full bg-[#fff8e6] px-3 py-1.5">
+                                    {renderStars(3.5)}
+
+                                    <span className="text-sm font-bold text-[#745c00]">
+                                      3.5
+                                    </span>
+                                  </div>
+
+                                  <div className="flex items-center gap-2 rounded-full bg-[#f5f3f3] px-3 py-1.5 text-sm font-semibold text-[#4d4635]">
+                                    <IoLocation />
+                                    <span className="truncate max-w-45">
+                                      {artist.location}
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              <div className="rounded-2xl bg-[#fff7f7] border border-[#f1d4d6] px-5 py-4 text-right">
+                                <span className="block text-xs font-bold uppercase tracking-widest text-[#8a7f79]">
+                                  Starting From
+                                </span>
+
+                                <div className="mt-1 flex items-center justify-end">
+                                  <MdCurrencyRupee className="text-[#b12b31]" />
+
+                                  <span className="text-3xl font-black text-[#b12b31] font-['Plus_Jakarta_Sans']">
+                                    {artist?.startingPrice}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            <p className="mb-8 text-sm md:text-[15px] leading-7 text-[#5f5650]">
+                              {artist?.bio}
+                            </p>
+
+                            {/* Buttons */}
+                            <div className="mt-auto flex flex-wrap gap-3">
+                              <button
+                                title="Call this artist"
+                                onClick={() => {
+                                  if (artist.phone) {
+                                    window.location.href = `tel:${artist.phone}`;
+                                  }
+                                }}
+                                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#b12b31] px-5 font-bold text-white shadow-lg shadow-[#b12b31]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] cursor-pointer"
+                              >
+                                <MdCall className="text-xl" />
+                                Call Now
+                              </button>
+
+                              <button
+                                title="Talk to this artist on whatsApp"
+                                onClick={() => {
+                                  if (artist.phone) {
+                                    const phone = artist.phone.replace(
+                                      /\D/g,
+                                      "",
+                                    );
+                                    const message = encodeURIComponent(
+                                      `Hi ${artist.fullName}, I found you on our <strong>Gramin Vivah</strong> platform and would like to know more about your services.`,
+                                    );
+
+                                    window.open(
+                                      `https://wa.me/${phone}?text=${message}`,
+                                      "_blank",
+                                    );
+                                  }
+                                }}
+                                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#006d2f] px-5 font-bold text-white shadow-lg shadow-[#006d2f]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] cursor-pointer"
+                              >
+                                <FaWhatsapp className="text-lg" />
+                                WhatsApp
+                              </button>
+
+                              <SaveArtistButton
+                                artistId={artist.uid}
+                                variant="with-label"
+                                onLoginRequired={handleSaveLoginRequired}
+                                className="flex-1 md:flex-none cursor-pointer"
+                              />
+
+                              <button
+                                title="View artist profile"
+                                onClick={() =>
+                                  navigate(`/artist-profile/${artist.uid}`)
+                                }
+                                className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl border border-[#eadbdd] bg-[#fcf8f8] px-5 font-bold text-[#4d4635] transition-all hover:border-[#b12b31]/20 hover:bg-[#fff7f7] hover:text-[#b12b31] active:scale-[0.98] cursor-pointer"
+                              >
+                                <FaRegEye />
+                                View Profile
+                              </button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </article>
-                  ))}
+                      </article>
+                    ),
+                  )}
 
                   {/* Pagination */}
                   <div className="flex items-center justify-center gap-4 pt-4">
                     <button
-                      disabled={!hasPreviousPage}
-                      onClick={() => loadArtists("prev")}
+                      disabled={currentPage === 1}
+                      onClick={handlePrevPage}
                       className="rounded-2xl border border-[#eadbdd] bg-white px-7 py-3 font-bold text-[#4d4635] shadow-sm transition-all hover:border-[#b12b31]/30 hover:bg-[#fff7f7] disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                     >
                       ← Previous
                     </button>
 
+                    <span className="text-sm font-semibold text-[#4d4635]">
+                      Page {currentPage} of {totalPages}
+                    </span>
+
                     <button
-                      disabled={!hasNextPage}
-                      onClick={() => loadArtists("next")}
+                      disabled={currentPage === totalPages}
+                      onClick={handleNextPage}
                       className="rounded-2xl bg-[#b12b31] px-7 py-3 font-bold text-white shadow-lg shadow-[#b12b31]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-40 cursor-pointer"
                     >
                       Next →
@@ -386,7 +540,9 @@ const SearchResultsPage = () => {
                 </>
               ) : (
                 <div className="flex flex-col items-center justify-center rounded-4xl border border-dashed border-[#e7d8d9] bg-white/70 py-28 text-center">
-                  <div className="mb-5 text-6xl">🎨</div>
+                  <div className="mb-5 text-6xl">
+                    <IoColorPaletteSharp className="text-[#b12b31]" />
+                  </div>
 
                   <h2 className="text-3xl font-black text-[#1c1b1c] font-['Plus_Jakarta_Sans']">
                     No Artists Found

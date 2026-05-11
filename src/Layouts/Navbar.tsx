@@ -1,6 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink, Link } from "react-router-dom";
 import { useAuth } from "../Context/AuthContext";
+
+interface NavItemTypes {
+  path: string;
+  label: string;
+}
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -19,6 +24,17 @@ const Navbar = () => {
     },
     { path: "/user-login", label: user == null ? "Login" : "Logout" },
   ];
+
+  const [filteredNavItems, setFilteredNavItems] =
+    useState<NavItemTypes[]>(navItems);
+
+  useEffect(() => {
+    if (user == null) {
+      setFilteredNavItems(
+        navItems.filter((items: NavItemTypes) => items.label != "Dashboard"),
+      );
+    }
+  }, [user]);
 
   const handleLogout = (label: string) => {
     if (label === "Logout") {
@@ -52,7 +68,7 @@ const Navbar = () => {
           </Link>
 
           <div className="hidden md:flex items-center gap-8">
-            {navItems.map((item) => (
+            {filteredNavItems.map((item) => (
               <NavLink
                 onClick={() => handleLogout(item.label)}
                 key={item.path}
