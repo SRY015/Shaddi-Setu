@@ -14,15 +14,13 @@ import type {
 } from "../../Types/artistTypes";
 import { collection, doc, getDoc, getDocs } from "firebase/firestore";
 import { COLLECTIONS, db } from "../../Config/firebaseConfig";
-import { IoMdChatbubbles } from "react-icons/io";
-import { IoCall } from "react-icons/io5";
-import { SaveArtistButton } from "../../Components/SaveArtistButton";
-// import { useAuth } from "../../Context/AuthContext";
+import { SaveArtistButton } from "../../Components/Buttons/SaveArtistButton";
+import CallButton from "../../Components/Buttons/CallArtistButton";
+import WhatsAppButton from "../../Components/Buttons/WhatsAppButton";
 
 const ArtistProfile = () => {
   const { artistId } = useParams();
   const navigate = useNavigate();
-  // const { user } = useAuth();
 
   const [artistDetails, setArtistDetails] = useState<ArtistProfileType | null>(
     null,
@@ -329,20 +327,18 @@ const ArtistProfile = () => {
               </div>
 
               <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-                <button className="h-14 px-6 rounded-xl bg-[#006d2f] text-white font-bold flex items-center justify-center gap-2 cursor-pointer">
-                  <span className="material-symbols-outlined">
-                    <IoCall />
-                  </span>
-                  Call Now
-                </button>
-
-                <button className="h-14 px-6 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-2 cursor-pointer">
-                  <span className="material-symbols-outlined">
-                    <IoMdChatbubbles />
-                  </span>
-                  WhatsApp
-                </button>
-
+                <CallButton
+                  phone={artistDetails?.phone || "91"}
+                  name={artistDetails?.fullName}
+                  label="Call Now"
+                  className="h-14 px-6 rounded-xl bg-[#006d2f] text-white font-bold flex items-center justify-center gap-2 cursor-pointer"
+                />
+                <WhatsAppButton
+                  phone={artistDetails?.phone || "91"}
+                  name={artistDetails?.fullName}
+                  label="WhatsApp"
+                  className="h-14 px-6 rounded-xl bg-[#25D366] text-white font-bold flex items-center justify-center gap-2 cursor-pointer"
+                />
                 <SaveArtistButton
                   artistId={artistId || ""}
                   variant="with-label"

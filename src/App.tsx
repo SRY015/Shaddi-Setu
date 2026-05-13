@@ -13,6 +13,7 @@ import ArtistDashboard from "./Pages/Artist/ArtistDashboard";
 import RoleProtectedRoute from "./Components/RoleProtectedRoute";
 import ErrorPage from "./Pages/ErrorPage";
 import ForgotPassword from "./Pages/Auth/ForgotPassword";
+import CompareArtistsPage from "./Pages/CompareArtistsPage";
 
 function App() {
   return (
@@ -34,6 +35,10 @@ const appRouter = createBrowserRouter([
       {
         path: "search-artist",
         element: <SearchResultsPage />,
+      },
+      {
+        path: "compare-artists",
+        element: <CompareArtistsPage />,
       },
       {
         path: "user-login",

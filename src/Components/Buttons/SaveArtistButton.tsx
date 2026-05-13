@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 import { FaHeart } from "react-icons/fa";
 import { FiHeart } from "react-icons/fi";
-import { useSaveArtist } from "../Hooks/useSaveArtist";
-import { useAuth } from "../Context/AuthContext";
+import { useSaveArtist } from "../../Hooks/useSaveArtist";
+import { useAuth } from "../../Context/AuthContext";
 
 interface SaveArtistButtonProps {
   artistId: string;

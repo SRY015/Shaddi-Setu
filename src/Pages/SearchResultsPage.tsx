@@ -3,25 +3,36 @@ import Footer from "../Layouts/Footer";
 import Navbar from "../Layouts/Navbar";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
-  MdCall,
   MdFilterList,
   MdVerifiedUser,
   MdOutlineVerified,
   MdCurrencyRupee,
+  MdCheckCircle,
+  MdRadioButtonUnchecked,
 } from "react-icons/md";
-import { FaWhatsapp } from "react-icons/fa6";
 import { FaRegEye } from "react-icons/fa";
 import { IoLocation, IoStar, IoStarHalf, IoStarOutline } from "react-icons/io5";
-import { SaveArtistButton } from "../Components/SaveArtistButton";
+import { SaveArtistButton } from "../Components/Buttons/SaveArtistButton";
 import { useArtist } from "../Hooks/useArtist";
 import LocationPicker from "../Components/LocationPicker";
 import calculateDistance from "../Utils/calculateDistance";
 import { IoColorPaletteSharp } from "react-icons/io5";
+import { useComparison } from "../Context/ComparisonContext";
+import ComparisonBadge from "../Components/ComparisonBadge";
+import { toast } from "react-toastify";
+import CallButton from "../Components/Buttons/CallArtistButton";
+import WhatsAppButton from "../Components/Buttons/WhatsAppButton";
 
 const SearchResultsPage = () => {
   const navigate = useNavigate();
 
   const { loading, fetchArtists, totalNumberOfArtists } = useArtist();
+  const {
+    addToComparison,
+    removeFromComparison,
+    isInComparison,
+    canAddArtist,
+  } = useComparison();
 
   const [searchParams] = useSearchParams();
   const queryLocation = searchParams.get("location") || "";
@@ -36,7 +47,7 @@ const SearchResultsPage = () => {
 
   // const [verifiedOnly, setVerifiedOnly] = useState<boolean>(true);
 
-  // LBS ---> step1
+  // LBS state --->
   const [locationFilterData, setLocationFilterData] = useState({
     latitude: null as number | null,
     longitude: null as number | null,
@@ -54,6 +65,42 @@ const SearchResultsPage = () => {
 
   const handleSaveLoginRequired = () => {
     navigate("/user-login");
+  };
+
+  const handleToggleComparison = (artist: any) => {
+    if (isInComparison(artist.uid)) {
+      removeFromComparison(artist.uid);
+      toast.info(`${artist.fullName} removed from comparison`, {
+        position: "top-right",
+        autoClose: 2000,
+        hideProgressBar: false,
+        closeOnClick: true,
+      });
+    } else {
+      const validation = canAddArtist(artist);
+      if (validation.canAdd) {
+        const result = addToComparison(artist);
+        if (result.success) {
+          toast.success(`${artist.fullName} added to comparison`, {
+            position: "top-right",
+            autoClose: 2000,
+            hideProgressBar: false,
+            closeOnClick: true,
+          });
+        }
+      } else {
+        toast.error(validation.reason || "Cannot add artist to comparison", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+        });
+      }
+    }
+  };
+
+  const handleViewComparison = () => {
+    navigate("/compare-artists");
   };
 
   const loadArtists = async () => {
@@ -159,7 +206,7 @@ const SearchResultsPage = () => {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [budgetRange, minimumRating, locationFilterData]);
+  }, [budgetRange, minimumRating, locationFilterData, artistType]);
 
   return (
     <div className="min-h-screen bg-[#fcf8f8] text-[#1c1b1c] overflow-hidden">
@@ -241,6 +288,7 @@ const SearchResultsPage = () => {
                         location: "",
                       });
                       setMinimumRating(4);
+                      setArtistType("");
                       // setVerifiedOnly(true);
                     }}
                     className="text-xs font-bold text-[#b12b31] hover:underline cursor-pointer"
@@ -248,7 +296,23 @@ const SearchResultsPage = () => {
                     Reset
                   </button>
                 </div>
-
+                {/* Artist Type */}
+                <div className="mb-8">
+                  <label className="mb-4 block text-sm font-bold">
+                    Artist Type
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={artistType}
+                      onChange={(e) => setArtistType(e.target.value)}
+                      className="w-full rounded-2xl border border-[#efe5e6] bg-[#fcf8f8] px-4 py-3 text-sm font-semibold text-[#4d4635] focus:outline-none focus:ring-2 focus:ring-[#b12b31]/20 cursor-pointer"
+                    >
+                      <option value="">All Artists</option>
+                      <option value="makeupArtist">Makeup Artist</option>
+                      <option value="photographer">Photographer</option>
+                    </select>
+                  </div>
+                </div>
                 {/* Budget */}
                 <div className="mb-8">
                   <div className="mb-8">
@@ -410,30 +474,59 @@ const SearchResultsPage = () => {
                           {/* Content */}
                           <div className="flex flex-1 flex-col p-6 md:p-8">
                             <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                              <div>
-                                <h3 className="text-2xl md:text-3xl font-black text-[#1c1b1c] font-['Plus_Jakarta_Sans']">
-                                  {artist.fullName}
-                                </h3>
+                              <div className="flex-1">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div>
+                                    <h3 className="text-2xl md:text-3xl font-black text-[#1c1b1c] font-['Plus_Jakarta_Sans']">
+                                      {artist.fullName}
+                                    </h3>
 
-                                <div className="mt-3 flex flex-wrap items-center gap-3">
-                                  <div className="flex items-center gap-2 rounded-full bg-[#fff8e6] px-3 py-1.5">
-                                    {renderStars(3.5)}
+                                    <div className="mt-3 flex flex-wrap items-center gap-3">
+                                      <div className="flex items-center gap-2 rounded-full bg-[#fff8e6] px-3 py-1.5">
+                                        {renderStars(3.5)}
 
-                                    <span className="text-sm font-bold text-[#745c00]">
-                                      3.5
-                                    </span>
+                                        <span className="text-sm font-bold text-[#745c00]">
+                                          3.5
+                                        </span>
+                                      </div>
+
+                                      <div className="flex items-center gap-2 rounded-full bg-[#f5f3f3] px-3 py-1.5 text-sm font-semibold text-[#4d4635]">
+                                        <IoLocation />
+                                        <span className="truncate max-w-45">
+                                          {artist.location}
+                                        </span>
+                                      </div>
+                                    </div>
                                   </div>
 
-                                  <div className="flex items-center gap-2 rounded-full bg-[#f5f3f3] px-3 py-1.5 text-sm font-semibold text-[#4d4635]">
-                                    <IoLocation />
-                                    <span className="truncate max-w-45">
-                                      {artist.location}
-                                    </span>
-                                  </div>
+                                  {/* Comparison Checkbox - Better Positioned */}
+                                  <button
+                                    onClick={() =>
+                                      handleToggleComparison(artist)
+                                    }
+                                    className="mt-1 shrink-0 rounded-full p-2 bg-gray-100 hover:bg-gray-200 transition-all cursor-pointer hover:scale-110"
+                                    title={
+                                      isInComparison(artist.uid)
+                                        ? "Remove from comparison"
+                                        : "Add to comparison"
+                                    }
+                                  >
+                                    {isInComparison(artist.uid) ? (
+                                      <MdCheckCircle
+                                        size={24}
+                                        className="text-[#b12b31]"
+                                      />
+                                    ) : (
+                                      <MdRadioButtonUnchecked
+                                        size={24}
+                                        className="text-gray-400"
+                                      />
+                                    )}
+                                  </button>
                                 </div>
                               </div>
 
-                              <div className="rounded-2xl bg-[#fff7f7] border border-[#f1d4d6] px-5 py-4 text-right">
+                              <div className="rounded-2xl bg-[#fff7f7] border border-[#f1d4d6] px-5 py-4 text-right shrink-0">
                                 <span className="block text-xs font-bold uppercase tracking-widest text-[#8a7f79]">
                                   Starting From
                                 </span>
@@ -454,42 +547,18 @@ const SearchResultsPage = () => {
 
                             {/* Buttons */}
                             <div className="mt-auto flex flex-wrap gap-3">
-                              <button
-                                title="Call this artist"
-                                onClick={() => {
-                                  if (artist.phone) {
-                                    window.location.href = `tel:${artist.phone}`;
-                                  }
-                                }}
+                              <CallButton
+                                phone={artist.phone}
+                                name={artist.fullName}
+                                label="Call Now"
                                 className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#b12b31] px-5 font-bold text-white shadow-lg shadow-[#b12b31]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] cursor-pointer"
-                              >
-                                <MdCall className="text-xl" />
-                                Call Now
-                              </button>
-
-                              <button
-                                title="Talk to this artist on whatsApp"
-                                onClick={() => {
-                                  if (artist.phone) {
-                                    const phone = artist.phone.replace(
-                                      /\D/g,
-                                      "",
-                                    );
-                                    const message = encodeURIComponent(
-                                      `Hi ${artist.fullName}, I found you on our <strong>Gramin Vivah</strong> platform and would like to know more about your services.`,
-                                    );
-
-                                    window.open(
-                                      `https://wa.me/${phone}?text=${message}`,
-                                      "_blank",
-                                    );
-                                  }
-                                }}
+                              />
+                              <WhatsAppButton
+                                phone={artist.phone}
+                                name={artist.fullName}
+                                label="WhatsApp"
                                 className="flex h-14 flex-1 items-center justify-center gap-2 rounded-2xl bg-[#006d2f] px-5 font-bold text-white shadow-lg shadow-[#006d2f]/20 transition-all hover:-translate-y-0.5 hover:opacity-95 active:scale-[0.98] cursor-pointer"
-                              >
-                                <FaWhatsapp className="text-lg" />
-                                WhatsApp
-                              </button>
+                              />
 
                               <SaveArtistButton
                                 artistId={artist.uid}
@@ -567,6 +636,9 @@ const SearchResultsPage = () => {
       </main>
 
       <Footer />
+
+      {/* Comparison Badge */}
+      <ComparisonBadge onCompareClick={handleViewComparison} />
     </div>
   );
 };

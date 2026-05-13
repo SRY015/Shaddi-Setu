@@ -45,6 +45,7 @@ export interface ArtistProfile {
   profilePicture?: string;
   verified?: boolean;
   role: string;
+  rating?: string | number;
   serviceHours?: ServiceHours[];
   profileCompletion?: number;
 }

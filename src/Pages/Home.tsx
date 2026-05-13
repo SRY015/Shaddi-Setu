@@ -8,16 +8,17 @@ import { useAuth } from "../Context/AuthContext";
 import { useArtist } from "../Hooks/useArtist";
 import { findNearbyArtists, formatDistance } from "../Utils/findNearbyArtists";
 import NearbyArtistsMap from "../Components/NearbyArtistsMap";
-import { SaveArtistButton } from "../Components/SaveArtistButton";
-import { MdCall, MdOutlineVerified, MdCurrencyRupee } from "react-icons/md";
-import { FaWhatsapp } from "react-icons/fa6";
+import { SaveArtistButton } from "../Components/Buttons/SaveArtistButton";
+import { MdOutlineVerified, MdCurrencyRupee } from "react-icons/md";
 import { FaRegEye } from "react-icons/fa";
 import { IoLocation } from "react-icons/io5";
+import CallButton from "../Components/Buttons/CallArtistButton";
+import WhatsAppButton from "../Components/Buttons/WhatsAppButton";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const { userProfile, user } = useAuth();
-  const { fetchArtists } = useArtist();
+  const { fetchArtists, totalNumberOfArtists } = useArtist();
 
   const [location, setLocation] = useState<string>("");
   const [artistType, setArtistType] = useState<"makeupArtist" | "photographer">(
@@ -258,13 +259,16 @@ const Home: React.FC = () => {
 
                     {/* Action Buttons */}
                     <div className="flex gap-1.5">
-                      <button className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-[#b12b31] px-2 py-2 text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 cursor-pointer">
-                        <MdCall size={14} />
-                      </button>
-
-                      <button className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-[#006d2f] px-2 py-2 text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 cursor-pointer">
-                        <FaWhatsapp size={12} />
-                      </button>
+                      <CallButton
+                        phone={artist.phone}
+                        name={artist.fullName}
+                        className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-[#b12b31] px-2 py-2 text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 cursor-pointer"
+                      />
+                      <WhatsAppButton
+                        phone={artist.phone}
+                        name={artist.fullName}
+                        className="flex-1 flex items-center justify-center gap-1 rounded-lg bg-[#006d2f] px-2 py-2 text-xs font-bold text-white transition-all hover:opacity-90 active:scale-95 cursor-pointer"
+                      />
 
                       <button
                         onClick={() =>
@@ -422,7 +426,10 @@ const Home: React.FC = () => {
                 <div className="mt-8 flex flex-wrap items-center justify-center lg:justify-start gap-4 sm:gap-6">
                   {[
                     { value: "10K+", label: "Monthly Visitors" },
-                    { value: "500+", label: "Verified Artists" },
+                    {
+                      value: `${totalNumberOfArtists}+`,
+                      label: "Verified Artists",
+                    },
                     { value: "24/7", label: "Lead Support" },
                   ].map((item, i) => (
                     <div
